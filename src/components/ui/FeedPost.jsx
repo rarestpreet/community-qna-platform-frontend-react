@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function FeedPost({ post, index }) {
+    const navigate = useNavigate();
     const {
         authorId,
         createdAt,
@@ -13,7 +15,9 @@ function FeedPost({ post, index }) {
     const [hoverIndex, setHoverIndex] = useState(null)
 
     return (
-        <div key={index} className="group bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-md
+        <div key={index} 
+        onClick={() => navigate(`/question/${postId}`)}
+        className="group bg-gray-50 border border-gray-200 rounded-2xl p-5 shadow-md
         flex gap-6 items-center w-full
         hover:shadow-xl hover:border-green-500 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer">
 
