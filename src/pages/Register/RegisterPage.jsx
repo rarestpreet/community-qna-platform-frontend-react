@@ -11,7 +11,7 @@ function RegisterPage() {
     const [password, setPassword] = useState("")
     const [errors, setErrors] = useState({})
     const navigate = useNavigate()
-    const { setLoading } = useUserContext()
+    const { loading, setLoading } = useUserContext()
 
     const handleRegister = async (e) => {
         e.preventDefault()
@@ -64,8 +64,9 @@ function RegisterPage() {
                         <button
                             type="submit"
                             className="mt-3 w-full bg-black text-white font-bold text-lg py-3 rounded-xl hover:bg-gray-800 transition-colors shadow-md"
+                            disabled={loading}
                         >
-                            Sign Up
+                            {loading ? "Loading" : "Sign Up"}
                         </button>
                     </form>
 

@@ -1,63 +1,77 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useUserContext } from '../../context/userContext';
-import { FaUserCircle, FaEnvelope, FaKey, FaCommentDots, FaQuestionCircle, FaCheckCircle, FaExclamationTriangle, FaEdit, FaArrowLeft, FaSignOutAlt } from 'react-icons/fa';
+import { FaUserCircle, FaEnvelope, FaKey, FaCommentDots, FaQuestionCircle, FaCheckCircle, FaExclamationTriangle, FaEdit, FaArrowLeft, FaSignOutAlt, FaInbox, FaUserShield } from 'react-icons/fa';
 import AuthInput from '../../components/ui/AuthInput';
+import apiCall from '../../services/apiCall';
+import TabLoader from '../../components/ui/TabLoader';
+import EmptyState from '../../components/ui/EmptyState';
 
 export default function UserProfilePage() {
-    const { username } = useParams();
-    const { userProfile, setUserProfile } = useUserContext();
-    const navigate = useNavigate();
+    const { username } = useParams()
+    const { loading, setLoading } = useUserContext()
+    const navigate = useNavigate()
+    const [userProfile, setUserProfile] = useState({})
+    const [userQuestions, setUserQuestions] = useState([])
+    const [userAnswers, setUserAnswers] = useState([])
+    const [userComments, setUserComments] = useState([])
 
-    // For UI demonstration, let's pretend we are looking at our own profile
-    // if username from URL matches our context, or just universally show it if it's the pure UI mock request
-    const isOwner = true; // Hardcoded to true to demonstrate the Change Password/Verify Email buttons
+
+    useEffect(() => {
+        const getProfile = async () => {
+            const userDetails = await apiCall.getUserProfile(username, setLoading)
+            setUserProfile(userDetails)
+        }
+        getProfile()
+        getUserQuestion()
+
+    }, [])
+
+
+    const handleLogout = async () => {
+        const response = await apiCall.terminateSession(setLoading, setUserProfile)
+
+        if (response) {
+            navigate("/")
+        }
+    }
+
+    const getUserQuestion = async () => {
+        const data = await apiCall.getUserQuestion(username, setLoading)
+        setUserQuestions(Array.isArray(data) ? data : [])
+    }
+
+    const getUserComment = async () => {
+        const data = await apiCall.getUserComment(username, setLoading)
+        setUserComments(Array.isArray(data) ? data : [])
+    }
+
+    const getUserAnswer = async () => {
+        const data = await apiCall.getUserAnswer(username, setLoading)
+        setUserAnswers(Array.isArray(data) ? data : [])
+    }
 
     const [activeTab, setActiveTab] = useState('questions');
     const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
     const [isVerifyEmailOpen, setIsVerifyEmailOpen] = useState(false);
 
-    // Mock Data
-    const mockUser = {
-        username: username || "cooluser123",
-        email: "cooluser@example.com",
-        isAccountVerified: false,
-        joinedDate: "October 2023",
-        reputation: 1250,
-        bio: "Frontend Developer | React Enthusiast | Loves answering questions about CSS."
-    };
-
-    const mockQuestions = [
-        { id: 1, title: "How to center a div in Tailwind?", votes: 15, answers: 3, date: "2 days ago" },
-        { id: 2, title: "React Context API vs Redux for small apps?", votes: 42, answers: 7, date: "1 week ago" }
-    ];
-
-    const mockAnswers = [
-        { id: 101, questionTitle: "What is a closure in JavaScript?", votes: 8, content: "A closure is the combination of a function bundled together...", date: "4 days ago" },
-        { id: 102, questionTitle: "Why is useEffect running twice?", votes: 24, content: "In React 18, Strict Mode causes components to render twice...", date: "2 weeks ago" }
-    ];
-
-    const mockComments = [
-        { id: 201, postTitle: "Discussion: best UI libraries", content: "I personally love shadcn/ui!", date: "1 day ago" }
-    ];
-
     return (
         <div className="min-h-screen bg-gray-50 pb-12 relative">
             {/* Top Navigation Bar */}
             <div className="absolute top-0 left-0 w-full p-4 sm:p-6 flex justify-between items-center z-10">
-                <button 
+                <button
                     onClick={() => navigate("/")}
-                    className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm"
+                    className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 text-black px-3 py-2 rounded-xl font-bold transition-all shadow-sm cursor-pointer"
                 >
                     <FaArrowLeft /> Home
                 </button>
-                {isOwner && (
-                    <button 
+                {userProfile.operable && (
+                    <button
                         onClick={() => {
-                            if (setUserProfile) setUserProfile({});
-                            navigate("/login");
+                            handleLogout()
+                            navigate("/login")
                         }}
-                        className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-md"
+                        className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-md cursor-pointer"
                     >
                         <FaSignOutAlt /> Logout
                     </button>
@@ -74,7 +88,7 @@ export default function UserProfilePage() {
                         <div className="w-32 h-32 rounded-full border-4 border-white bg-green-100 flex items-center justify-center text-green-600 text-5xl shadow-md">
                             <FaUserCircle className="w-full h-full text-green-500 bg-white rounded-full" />
                         </div>
-                        {mockUser.isAccountVerified && (
+                        {userProfile.accountVerified && (
                             <div className="absolute bottom-1 right-1 bg-white rounded-full p-0.5 shadow-sm">
                                 <FaCheckCircle className="text-blue-500 text-xl" title="Verified Account" />
                             </div>
@@ -83,35 +97,44 @@ export default function UserProfilePage() {
 
                     <div className="flex-1">
                         <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-                            {mockUser.username}
+                            {userProfile.username}
                         </h1>
                         <p className="text-gray-500 mt-1 flex items-center gap-2">
-                            <FaEnvelope className="text-gray-400" /> {mockUser.email}
-                            {!mockUser.isAccountVerified && (
+                            <FaEnvelope className="text-gray-400" /> {userProfile.email}
+                            {!userProfile.accountVerified && (
                                 <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
                                     <FaExclamationTriangle /> Unverified
                                 </span>
                             )}
                         </p>
-                        <p className="text-gray-700 mt-3 max-w-2xl">{mockUser.bio}</p>
                         <div className="flex gap-4 mt-4 text-sm text-gray-600 font-medium">
-                            <span className="bg-gray-100 px-3 py-1 rounded-lg">Reputation: <strong className="text-black">{mockUser.reputation}</strong></span>
-                            <span className="bg-gray-100 px-3 py-1 rounded-lg">Joined {mockUser.joinedDate}</span>
+                            <span className="bg-gray-100 px-3 py-1 rounded-lg">Reputation: <strong className="text-black">{userProfile.reputation}</strong></span>
+                            <span className="bg-gray-100 px-3 py-1 rounded-lg">Joined {userProfile.createdAt}</span>
                         </div>
                     </div>
 
-                    {isOwner && (
+                    {userProfile.operable && (
                         <div className="absolute top-6 right-6 flex flex-col gap-2">
+                            {userProfile.role === 'ADMIN' && (
+                                <button
+                                    onClick={() => navigate('/admin')}
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+                                >
+                                    <FaUserShield /> Admin Dashboard
+                                </button>
+                            )}
                             <button
                                 onClick={() => setIsChangePasswordOpen(true)}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                                className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+                                disabled={true}
                             >
                                 <FaKey /> Change Password
                             </button>
-                            {!mockUser.isAccountVerified && (
+                            {!userProfile.accountVerified && (
                                 <button
                                     onClick={() => setIsVerifyEmailOpen(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm"
+                                    className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-semibold transition-colors shadow-sm cursor-pointer"
+                                    disabled={true}
                                 >
                                     <FaCheckCircle /> Verify Email
                                 </button>
@@ -126,10 +149,26 @@ export default function UserProfilePage() {
                         {['questions', 'answers', 'comments'].map(tab => (
                             <button
                                 key={tab}
-                                onClick={() => setActiveTab(tab)}
-                                className={`whitespace-nowrap pb-4 text-lg font-semibold flex items-center gap-2 transition-colors relative ${activeTab === tab
-                                        ? "text-green-600"
-                                        : "text-gray-500 hover:text-gray-800"
+                                onClick={() => {
+                                    if (activeTab == tab) {
+                                        return
+                                    }
+
+                                    if (tab == 'questions') {
+                                        getUserQuestion()
+                                    }
+                                    else if (tab == 'answers') {
+                                        getUserAnswer()
+                                    }
+                                    else {
+                                        getUserComment()
+                                    }
+
+                                    setActiveTab(tab)
+                                }}
+                                className={`whitespace-nowrap pb-4 text-lg font-semibold flex items-center gap-2 transition-colors relative cursor-pointer ${activeTab === tab
+                                    ? "text-green-600"
+                                    : "text-gray-500 hover:text-gray-800"
                                     }`}
                             >
                                 {tab === 'questions' && <FaQuestionCircle />}
@@ -146,51 +185,79 @@ export default function UserProfilePage() {
                     {/* Tab Content */}
                     <div className="mt-6">
                         {activeTab === 'questions' && (
-                            <div className="space-y-4">
-                                {mockQuestions.map(q => (
-                                    <div key={q.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-green-300 transition-colors">
-                                        <h3 className="text-xl font-bold text-gray-900">{q.title}</h3>
-                                        <div className="flex gap-4 mt-3 text-sm text-gray-500 font-medium">
-                                            <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-md">{q.votes} votes</span>
-                                            <span>{q.answers} answers</span>
-                                            <span>asked {q.date}</span>
-                                        </div>
+                            loading ? <TabLoader rows={3} /> :
+                                userQuestions.length === 0 ? (
+                                    <EmptyState 
+                                        icon={FaQuestionCircle} 
+                                        title="No Questions Yet" 
+                                        message="This user hasn't posted any questions." 
+                                    />
+                                ) : (
+                                    <div className="space-y-4">
+                                        {userQuestions.map(q => (
+                                            <div key={q.postId} 
+                                                onClick={() => navigate(`/question/${q.postId}`)}
+                                                className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-green-300 transition-all duration-200 hover:shadow-md cursor-pointer hover:-translate-y-0.5">
+                                                <h3 className="text-xl font-bold text-gray-900">{q.title}</h3>
+                                                <div className="flex gap-4 mt-3 text-sm text-gray-500 font-medium">
+                                                    <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-md">{q.score} votes</span>
+                                                    <span>{q.status} status</span>
+                                                    <span>asked {q.updatedAt}</span>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                )
                         )}
 
                         {activeTab === 'answers' && (
-                            <div className="space-y-4">
-                                {mockAnswers.map(a => (
-                                    <div key={a.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-green-300 transition-colors">
-                                        <div className="text-sm font-semibold text-gray-500 mb-2">
-                                            Answered in: <span className="text-gray-900">{a.questionTitle}</span>
-                                        </div>
-                                        <p className="text-gray-800">{a.content}</p>
-                                        <div className="flex gap-4 mt-3 text-sm text-gray-500 font-medium">
-                                            <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-md">{a.votes} votes</span>
-                                            <span>{a.date}</span>
-                                        </div>
+                            loading ? <TabLoader rows={3} /> :
+                                userAnswers.length === 0 ? (
+                                    <EmptyState 
+                                        icon={FaCommentDots} 
+                                        title="No Answers Yet" 
+                                        message="This user hasn't provided any answers." 
+                                    />
+                                ) : (
+                                    <div className="space-y-4">
+                                        {userAnswers.map(a => (
+                                            <div key={a.postId} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-green-300 transition-colors">
+                                                <div className="text-sm font-semibold text-gray-500 mb-2">
+                                                    Answered in: <span className="text-gray-900">{a.parentPostTitle}</span>
+                                                </div>
+                                                <p className="text-gray-800">{a.body}</p>
+                                                <div className="flex gap-4 mt-3 text-sm text-gray-500 font-medium">
+                                                    <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-md">{a.score} votes</span>
+                                                    <span>{a.updatedAt}</span>
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                )
                         )}
 
                         {activeTab === 'comments' && (
-                            <div className="space-y-4">
-                                {mockComments.map(c => (
-                                    <div key={c.id} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-green-300 transition-colors">
-                                        <div className="text-sm font-semibold text-gray-500 mb-2">
-                                            Commented on: <span className="text-gray-900">{c.postTitle}</span>
-                                        </div>
-                                        <p className="text-gray-800 text-sm italic border-l-4 border-gray-200 pl-3">{c.content}</p>
-                                        <div className="mt-3 text-xs text-gray-400 font-medium">
-                                            {c.date}
-                                        </div>
+                            loading ? <TabLoader rows={3} /> :
+                                userComments.length === 0 ? (
+                                    <EmptyState 
+                                        icon={FaEdit} 
+                                        title="No Comments Yet" 
+                                        message="This user hasn't made any comments." 
+                                    />
+                                ) : (
+                                    <div className="space-y-4">
+                                        {userComments.map(c => (
+                                            <div key={c.commentId} className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-green-300 transition-colors">
+                                                <div className="text-sm font-semibold text-gray-500 mb-2">
+                                                </div>
+                                                <p className="text-gray-800 text-sm italic border-l-4 border-gray-200 pl-3">{c.body}</p>
+                                                <div className="mt-3 text-xs text-gray-400 font-medium">
+                                                    {c.updatedAt}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
+                                )
                         )}
                     </div>
                 </div>
