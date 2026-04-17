@@ -6,6 +6,7 @@ import AuthInput from '../../components/ui/AuthInput';
 import apiCall from '../../services/apiCall';
 import TabLoader from '../../components/ui/TabLoader';
 import EmptyState from '../../components/ui/EmptyState';
+import PageNavBar from '../../components/ui/PageNavBar';
 
 export default function UserProfilePage() {
     const { username } = useParams()
@@ -56,32 +57,13 @@ export default function UserProfilePage() {
     const [isVerifyEmailOpen, setIsVerifyEmailOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12 relative">
-            {/* Top Navigation Bar */}
-            <div className="absolute top-0 left-0 w-full p-4 sm:p-6 flex justify-between items-center z-10">
-                <button
-                    onClick={() => navigate("/")}
-                    className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-md border border-white/20 text-black px-3 py-2 rounded-xl font-bold transition-all shadow-sm cursor-pointer"
-                >
-                    <FaArrowLeft /> Home
-                </button>
-                {userProfile.operable && (
-                    <button
-                        onClick={() => {
-                            handleLogout()
-                            navigate("/login")
-                        }}
-                        className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-md cursor-pointer"
-                    >
-                        <FaSignOutAlt /> Logout
-                    </button>
-                )}
-            </div>
+        <div className="min-h-screen bg-gray-50 pb-12 flex flex-col">
+            <PageNavBar title="User profile" />
 
             {/* Header / Cover Area */}
-            <div className="w-full h-48 bg-linear-to-r from-green-500 via-green-400 to-green-600"></div>
+            <div className="w-full h-30 bg-green-500"></div>
 
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Profile Info Card */}
                 <div className="-mt-16 bg-white rounded-2xl shadow-xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-6 relative border border-gray-100">
                     <div className="relative">
@@ -187,15 +169,15 @@ export default function UserProfilePage() {
                         {activeTab === 'questions' && (
                             loading ? <TabLoader rows={3} /> :
                                 userQuestions.length === 0 ? (
-                                    <EmptyState 
-                                        icon={FaQuestionCircle} 
-                                        title="No Questions Yet" 
-                                        message="This user hasn't posted any questions." 
+                                    <EmptyState
+                                        icon={FaQuestionCircle}
+                                        title="No Questions Yet"
+                                        message="This user hasn't posted any questions."
                                     />
                                 ) : (
                                     <div className="space-y-4">
                                         {userQuestions.map(q => (
-                                            <div key={q.postId} 
+                                            <div key={q.postId}
                                                 onClick={() => navigate(`/question/${q.postId}`)}
                                                 className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-green-300 transition-all duration-200 hover:shadow-md cursor-pointer hover:-translate-y-0.5">
                                                 <h3 className="text-xl font-bold text-gray-900">{q.title}</h3>
@@ -213,10 +195,10 @@ export default function UserProfilePage() {
                         {activeTab === 'answers' && (
                             loading ? <TabLoader rows={3} /> :
                                 userAnswers.length === 0 ? (
-                                    <EmptyState 
-                                        icon={FaCommentDots} 
-                                        title="No Answers Yet" 
-                                        message="This user hasn't provided any answers." 
+                                    <EmptyState
+                                        icon={FaCommentDots}
+                                        title="No Answers Yet"
+                                        message="This user hasn't provided any answers."
                                     />
                                 ) : (
                                     <div className="space-y-4">
@@ -225,7 +207,7 @@ export default function UserProfilePage() {
                                                 <div className="text-sm font-semibold text-gray-500 mb-2">
                                                     Answered in: <span className="text-gray-900">{a.parentPostTitle}</span>
                                                 </div>
-                                                <p className="text-gray-800">{a.body}</p>
+                                                <p className="text-gray-800 line-clamp-2">{a.body}</p>
                                                 <div className="flex gap-4 mt-3 text-sm text-gray-500 font-medium">
                                                     <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-md">{a.score} votes</span>
                                                     <span>{a.updatedAt}</span>
@@ -239,10 +221,10 @@ export default function UserProfilePage() {
                         {activeTab === 'comments' && (
                             loading ? <TabLoader rows={3} /> :
                                 userComments.length === 0 ? (
-                                    <EmptyState 
-                                        icon={FaEdit} 
-                                        title="No Comments Yet" 
-                                        message="This user hasn't made any comments." 
+                                    <EmptyState
+                                        icon={FaEdit}
+                                        title="No Comments Yet"
+                                        message="This user hasn't made any comments."
                                     />
                                 ) : (
                                     <div className="space-y-4">

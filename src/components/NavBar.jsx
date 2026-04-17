@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import BrandContainer from "./ui/BrandContainer"
 import { FaArrowRight } from "react-icons/fa"
 import { useUserContext } from "../context/userContext"
@@ -11,6 +11,7 @@ function NavBar() {
     const [isDropDownOpen, setIsDropDownOpen] = useState(false)
     const dropDownRef = useRef(null)
     const navigate = useNavigate()
+    const location = useLocation()
 
     useEffect(() => {
         const handleClickOutsite = (event) => {
@@ -61,7 +62,7 @@ function NavBar() {
                             {userProfile.role === 'ADMIN' && (
                                 <div className="cursor-pointer py-1 px-2 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded transition-colors"
                                     onClick={() => {
-                                        setIsDropDownOpen(false)
+                                        setIsDropDownOpen(false);
                                         navigate(`/admin`)
                                     }}
                                 >
@@ -69,10 +70,22 @@ function NavBar() {
                                 </div>
                             )}
                             <div className="cursor-pointer py-1 px-2 text-sm font-medium text-red-600 hover:bg-gray-100 rounded transition-colors flex items-center justify-between"
-                                onClick={() => handleLogout()}
+                                onClick={() =>
+                                    handleLogout()
+                                }
                             >
                                 Logout <IoMdLogOut className="text-lg" />
                             </div>
+                            {userProfile.role === "ADMIN" && (
+                                <div className="cursor-pointer py-1 px-2 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded transition-colors"
+                                    onClick={() => {
+                                        setIsDropDownOpen(false);
+                                        navigate(`/health`)
+                                    }}
+                                >
+                                    Health check
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

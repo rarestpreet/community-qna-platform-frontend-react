@@ -25,38 +25,27 @@ function HomePage() {
       {loading ? (
         <PageLoader text="Loading your feed..." />
       ) : feedData.length === 0 ? (
-        userProfile?.username ?
-          <EmptyState
-            icon={FaInbox}
-            title="Feed is Empty"
-            message="There are no posts to display right now. Check back later or ask a new question!"
-            actionButton={
-              <button
-                onClick={() => navigate("/ask")}
-                className="btn-primary mt-4"
-              >
-                Ask a Question
-              </button>
-            }
-          /> :
-          <EmptyState
-            icon={FaInbox}
-            title="Feed is Empty"
-            message="There are no posts to display right now. Check back later or ask a new question!"
-            actionButton={
-              <button
-                onClick={() => navigate("/register")}
-                className="btn-primary mt-4"
-              >
-                Sign up
-              </button>
-            }
-          />
-      ) : (
-        feedData.map((currPost, index) => {
-          return <FeedPost key={currPost.postId} post={currPost} index={index} />
-        })
-      )}
+        <EmptyState
+          icon={FaInbox}
+          title="Feed is Empty"
+          message="There are no posts to display right now. Check back later or ask a new question!"
+          actionButton={
+            <button
+              onClick={() => (userProfile?.username ?
+                navigate("/ask") :
+                navigate("/register")
+              )}
+              className="btn-primary mt-4"
+            >
+              {userProfile?.username ? "Ask a Question" : "Sign Up"}
+            </button>
+          }
+        />)
+        : (
+          feedData.map((currPost, index) => {
+            return <FeedPost key={currPost.postId} post={currPost} index={index} />
+          })
+        )}
     </div>
   )
 }
