@@ -3,7 +3,7 @@ import VoteBox from "./VoteBox";
 import StatusBadge from "./StatusBadge";
 import CommentsSection from "./CommentsSection";
 
-export default function QuestionCard({ question, userProfile }) {
+export default function QuestionCard({ question, userProfile, onSuccess }) {
     return (
         <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sm:p-8 flex gap-5">
             <VoteBox score={question.score} voted={question.hasVoted} userProfile={userProfile} />
@@ -45,7 +45,12 @@ export default function QuestionCard({ question, userProfile }) {
                 </div>
 
                 {/* Comments */}
-                <CommentsSection postId={question.postId} comments={question.comments} userProfile={userProfile} />
+                <CommentsSection
+                    postId={question.postId}
+                    comments={question.comments}
+                    userProfile={userProfile}
+                    onSuccess={onSuccess}
+                />
             </div>
         </section>
     );

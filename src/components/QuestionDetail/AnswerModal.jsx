@@ -3,14 +3,19 @@ import { FaReply } from "react-icons/fa";
 import apiCall from "../../services/apiCall";
 import { useUserContext } from "../../context/userContext";
 
-export default function AnswerModal({ parentPostId, onClose }) {
+export default function AnswerModal({ parentPostId, onClose, onSuccess }) {
     const [body, setBody] = useState("");
     const { loading, setLoading } = useUserContext()
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        await apiCall.postAnswer(parentPostId, setLoading)
+        await apiCall.postAnswer(parentPostId, body, setLoading)
+        if (onSuccess) {
+            onSuccess()
+        } else {
+            onClose()
+        }
     };
 
     const handleBackdrop = (e) => {
@@ -51,8 +56,7 @@ export default function AnswerModal({ parentPostId, onClose }) {
                             value={body}
                             onChange={e => setBody(e.target.value)}
                             placeholder="Share your knowledge. Be specific and detailed!"
-                            rows={8}
-                            maxLength={MAX}
+                            rows={5}
                             autoFocus
                             className={`w-full border rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400 resize-none
                                 focus:outline-none focus:ring-2 transition`}
@@ -73,7 +77,7 @@ export default function AnswerModal({ parentPostId, onClose }) {
                             className="px-6 py-2.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-sm shadow-md
                                 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all"
                         >
-                            Submit Answer
+                            {loading ? "loading" : "Submit Answer"}
                         </button>
                     </div>
                 </form>

@@ -2,15 +2,10 @@ import { FaUserCircle, FaRegClock } from "react-icons/fa";
 import VoteBox from "./VoteBox";
 import StatusBadge from "./StatusBadge";
 import CommentsSection from "./CommentsSection";
+import { useUserContext } from "../../context/userContext";
 
-function formatDate(isoString) {
-    return new Date(isoString).toLocaleString(undefined, {
-        year: "numeric", month: "short", day: "numeric",
-        hour: "2-digit", minute: "2-digit",
-    });
-}
-
-export default function AnswerCard({ answer }) {
+export default function AnswerCard({ answer, onSuccess }) {
+    const { userProfile } = useUserContext()
     return (
         <div className={`bg-white rounded-2xl border shadow-sm p-6 flex gap-5
             ${answer.status === "ACCEPTED" ? "border-blue-200 shadow-blue-50" : "border-gray-100"}`}
@@ -22,7 +17,7 @@ export default function AnswerCard({ answer }) {
                     <FaUserCircle className="text-gray-300 text-2xl" />
                     <span className="text-sm font-semibold text-gray-600">Author #{answer.authorId}</span>
                     <span className="text-xs text-gray-400 flex items-center gap-1 ml-1">
-                        <FaRegClock />{formatDate(answer.createdAt)}
+                        <FaRegClock />{answer.createdAt}
                     </span>
                     <div className="ml-auto">
                         <StatusBadge status={answer.status} />
@@ -31,7 +26,12 @@ export default function AnswerCard({ answer }) {
 
                 <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">{answer.body}</p>
 
-                <CommentsSection postId={answer.postId} comments={answer.comments} />
+                <CommentsSection
+                    postId={answer.postId}
+                    comments={answer.comments}
+                    userProfile={userProfile}
+                    onSuccess={onSuccess}
+                />
             </div>
         </div>
     );

@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { FaUserCircle, FaRegClock, FaPen, FaComment, FaChevronDown, FaChevronUp } from "react-icons/fa";
-
-function formatDate(isoString) {
-    return new Date(isoString).toLocaleString(undefined, {
-        year: "numeric", month: "short", day: "numeric",
-        hour: "2-digit", minute: "2-digit",
-    });
-}
+import apiCall from "../../services/apiCall";
+import { useUserContext } from "../../context/userContext";
 
 function CommentItem({ comment }) {
     return (
@@ -16,7 +11,7 @@ function CommentItem({ comment }) {
                 <p className="text-sm text-gray-700 leading-relaxed">{comment.body}</p>
                 <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
                     <span className="font-medium text-gray-500">Author #{comment.authorId}</span>
-                    <span className="flex items-center gap-1"><FaRegClock />{formatDate(comment.updatedAt)}</span>
+                    <span className="flex items-center gap-1"><FaRegClock />{comment.updatedAt}</span>
                     {comment.isEditable && (
                         <button className="flex items-center gap-1 text-green-500 hover:text-green-700 font-semibold transition-colors">
                             <FaPen className="text-[10px]" /> Edit
@@ -28,9 +23,10 @@ function CommentItem({ comment }) {
     );
 }
 
-export default function CommentsSection({ postId, comments, userProfile }) {
+export default function CommentsSection({ postId, comments, userProfile, onSuccess }) {
     const [open, setOpen] = useState(false);
     const [commentBody, setCommentBody] = useState("");
+    const { loading, setLoading } = useUserContext()
 
     const MIN = 10;
     const MAX = 100;
@@ -39,11 +35,17 @@ export default function CommentsSection({ postId, comments, userProfile }) {
     const tooLong = commentBody.length > MAX;
     const canPost = trimmed.length >= MIN && !tooLong;
 
-    const handlePost = (e) => {
+    const handlePost = async (e) => {
         e.preventDefault();
         if (!canPost) return;
-        // TODO: wire up API — payload: { body: commentBody, postId }
+
+        const respose = await apiCall.postComment({
+            body: commentBody,
+            postId: postId
+        }, setLoading)
+
         setCommentBody("");
+        if (onSuccess) onSuccess();
     };
 
     const hasComments = comments && comments.length > 0;
@@ -95,7 +97,7 @@ export default function CommentsSection({ postId, comments, userProfile }) {
                     {/* validation hint */}
                     {tooShort && (
                         <p className="text-amber-500 text-[11px] font-medium pl-10">
-                            Comment must be at least {MIN} characters.
+                            Comment must be at least 10 characters.
                         </p>
                     )}
                 </>

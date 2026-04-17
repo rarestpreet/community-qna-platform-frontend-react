@@ -16,14 +16,15 @@ export default function QuestionDetailPage() {
     const [questionDetail, setQuestionDetail] = useState(null)
     const [showAnswerForm, setShowAnswerForm] = useState(false);
 
-    useEffect(() => {
-        const getQuestion = async () => {
-            const response = await apiCall.getQuestionDetails(postId, setLoading)
+    const fetchQuestionDetails = async () => {
+        const response = await apiCall.getQuestionDetails(postId, setLoading)
+        setQuestionDetail(response)
+        console.log(questionDetail);
+    }
 
-            setQuestionDetail(response)
-        }
-        getQuestion()
-    }, [])
+    useEffect(() => {
+        fetchQuestionDetails()
+    }, [postId])
 
     if (loading || !questionDetail) {
         return (
@@ -34,14 +35,20 @@ export default function QuestionDetailPage() {
         )
     }
 
-    const answersList = questionDetail.answers || questionDetail.answer || [];
+    const answersList = questionDetail.answers || [];
 
     return (
         <div className="min-h-screen bg-slate-50">
             <PageNavBar />
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8">
-                <QuestionCard question={questionDetail} userProfile={userProfile} />
+                <QuestionCard
+                    question={questionDetail}
+                    userProfile={userProfile}
+                    onSuccess={() => {
+                        fetchQuestionDetails();
+                    }}
+                />
 
                 {/* Answer Button */}
                 {userProfile?.username && (
@@ -60,6 +67,10 @@ export default function QuestionDetailPage() {
                     <AnswerModal
                         parentPostId={questionDetail.postId}
                         onClose={() => setShowAnswerForm(false)}
+                        onSuccess={() => {
+                            setShowAnswerForm(false);
+                            fetchQuestionDetails();
+                        }}
                     />
                 )}
 
@@ -72,7 +83,11 @@ export default function QuestionDetailPage() {
                     <div className="flex flex-col gap-5">
                         {answersList.length > 0 ? (
                             answersList.map(answer => (
-                                <AnswerCard key={answer.postId} answer={answer} />
+                                <AnswerCard
+                                    key={answer.postId}
+                                    answer={answer}
+                                    onSuccess={() => { fetchQuestionDetails() }}
+                                />
                             ))
                         ) : (
                             <EmptyState
