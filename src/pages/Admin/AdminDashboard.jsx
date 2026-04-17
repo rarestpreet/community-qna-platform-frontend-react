@@ -4,11 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import apiCall from '../../services/apiCall';
 import { FaPlus, FaTag, FaCheckCircle } from 'react-icons/fa';
 import PageNavBar from '../../components/ui/PageNavBar';
+import PageLoader from '../../components/ui/PageLoader';
 
 export default function AdminDashboard() {
-    const { userProfile, setLoading } = useUserContext();
+    const { userProfile } = useUserContext();
     const navigate = useNavigate();
 
+    const [tagsLoading, setTagsLoading] = useState(false);
     const [tags, setTags] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
 
@@ -18,18 +20,12 @@ export default function AdminDashboard() {
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
-        // Enforce Admin Role
-        if (userProfile?.role !== 'ADMIN') {
-            navigate("/");
-            return;
-        }
-
         const fetchTags = async () => {
-            const data = await apiCall.getAllTags(setLoading);
+            const data = await apiCall.getAllTags(setTagsLoading);
             setTags(data);
         };
         fetchTags();
-    }, [userProfile, navigate]);
+    }, []);
 
     if (userProfile?.role !== 'ADMIN') return null;
 
@@ -53,11 +49,11 @@ export default function AdminDashboard() {
         }
 
         setErrors({});
-        const response = await apiCall.createNewTag({ name: tagName, description: tagDescription }, setLoading);
+        const response = await apiCall.createNewTag({ name: tagName, description: tagDescription }, setTagsLoading);
 
         if (response) {
             // Successfully created. Refresh list and reset form
-            const updatedTags = await apiCall.getAllTags(setLoading);
+            const updatedTags = await apiCall.getAllTags(setTagsLoading);
             setTags(updatedTags);
             setTagName("");
             setTagDescription("");
@@ -66,9 +62,7 @@ export default function AdminDashboard() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50">
-            <PageNavBar title="Admin Dashboard" />
-
+        <>
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-10 flex flex-col gap-8">
 
                 {/* Header */}
@@ -140,7 +134,13 @@ export default function AdminDashboard() {
                             </tr>
                         </thead>
                         <tbody>
-                            {tags.length > 0 ? (
+                            {tagsLoading ? (
+                                <tr>
+                                    <td colSpan="3" className="py-10">
+                                        <PageLoader text="Loading tags..." />
+                                    </td>
+                                </tr>
+                            ) : tags.length > 0 ? (
                                 tags.map(tag => (
                                     <tr key={tag.tagId} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                                         <td className="py-4 px-6 text-sm text-slate-500">#{tag.tagId}</td>
@@ -162,6 +162,6 @@ export default function AdminDashboard() {
                 </div>
 
             </div>
-        </div>
+        </>
     );
 }
