@@ -45,7 +45,7 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, isLogge
 
                 {/* Meta */}
                 <div className="flex justify-end text-xs text-gray-400 font-medium mb-2">
-                    updated: {question.createdAt}
+                    updated: {question.updatedAt}
                 </div>
 
                 {/* Comments */}

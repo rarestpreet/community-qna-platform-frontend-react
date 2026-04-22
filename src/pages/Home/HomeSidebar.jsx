@@ -3,16 +3,17 @@ import { useNavigate } from "react-router-dom"
 import { FaPlus, FaTags, FaChartBar } from "react-icons/fa"
 import { useUserContext } from "../../context/userContext"
 import apiCall from "../../services/apiCall"
+import PageLoader from "../../components/ui/PageLoader"
 
 function HomeSidebar() {
     const navigate = useNavigate()
-    const { userProfile, setLoading } = useUserContext()
+    const { userProfile } = useUserContext()
     const [tags, setTags] = useState([])
+    const [loading, setLoading] = useState(false)
 
     useEffect(() => {
         const fetchTags = async () => {
-            const data = await apiCall.getAllTags(setLoading)
-            setTags(Array.isArray(data) ? data.slice(0, 8) : [])
+            const data = await apiCall.getAllTags(setLoading, setTags)
         }
         fetchTags()
     }, [])
@@ -46,20 +47,26 @@ function HomeSidebar() {
                     Popular Tags
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                    {tags.length > 0 ? (
-                        tags.map(tag => (
-                            <span
-                                key={tag.tagId}
-                                className="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1.5
+                    {
+                        loading ? (
+                            <PageLoader text="Loading popular tags..." />
+                        ) : (
+                            tags.length > 0 ? (
+                                tags.map(tag => (
+                                    <span
+                                        key={tag.tagId}
+                                        className="bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1.5
                                     rounded-lg hover:bg-brand-50 hover:text-brand-700 transition-colors cursor-default"
-                                title={tag.description}
-                            >
-                                {tag.name}
-                            </span>
-                        ))
-                    ) : (
-                        <p className="text-sm text-gray-400">No tags yet.</p>
-                    )}
+                                        title={tag.description}
+                                    >
+                                        {tag.name}
+                                    </span>
+                                ))
+                            ) : (
+                                <p className="text-sm text-gray-400">No tags yet.</p>
+                            )
+                        )
+                    }
                 </div>
             </div>
 

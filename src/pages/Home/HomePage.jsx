@@ -10,13 +10,13 @@ import { FaInbox } from "react-icons/fa"
 
 function HomePage() {
   const navigate = useNavigate()
-  const { userProfile, loading, setLoading } = useUserContext()
+  const { userProfile } = useUserContext()
   const [feedData, setFeedData] = useState([])
+  const [loading, setLoading] = useState()
 
   useEffect(() => {
     const populateFeed = async () => {
-      const response = await apiCall.getFeed(setLoading)
-      setFeedData(response?.data || [])
+      const response = await apiCall.getFeed(setLoading, setFeedData)
     }
     populateFeed()
   }, [])
@@ -31,16 +31,18 @@ function HomePage() {
             {["Newest", "Most Voted", "Unanswered"].map((tab, i) => (
               <button
                 key={tab}
-                className={`text-sm font-semibold pb-1 transition-colors cursor-pointer ${i === 0
+                className={`text-sm font-semibold pb-1 transition-colors cursor-not-allowed ${i === 0
                   ? "text-brand-600 border-b-2 border-brand-500"
                   : "text-gray-500 hover:text-gray-800"
                   }`}
+                disabled={true}
               >
                 {tab}
               </button>
             ))}
           </div>
 
+          {/* loading state inactive before react can populate feedData */}
           {loading ? (
             <PageLoader text="Loading your feed..." />
           ) : feedData.length === 0 ? (

@@ -6,16 +6,25 @@ import TagPill from "./TagPill"
 /**
  * FeedPost — post card in the home feed.
  * Props:
- *   - post: FeedPostResponseDTO { postId, authorId, title, score, createdAt, status, tags[] }
+ *   - post: FeedPostResponseDTO { 
+   postId,
+   authorId,
+   title,
+   score,
+   createdAt,
+   status,
+   tags[]
+   }
  */
 function FeedPost({ post }) {
     const navigate = useNavigate()
-    const { authorId, createdAt, postId, score, status, tags, title } = post
+    const { navigationPostId, authorUsername, title, score, updatedAt, postStatus, tags } = post
     const [hoverIndex, setHoverIndex] = useState(null)
 
     return (
         <div
-            onClick={() => navigate(`/question/${postId}`)}
+            key={navigationPostId}
+            onClick={() => navigate(`/question/${navigationPostId}`)}
             className="group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm
                 flex gap-6 items-center w-full
                 hover:shadow-lg hover:border-brand-300 hover:-translate-y-0.5
@@ -42,7 +51,7 @@ function FeedPost({ post }) {
                 <div className="flex flex-wrap gap-2 mt-1">
                     {tags?.map((currTag, index) => (
                         <div
-                            key={currTag.tagId || index}
+                            key={currTag.tagId}
                             className="relative flex items-center justify-center"
                             onMouseEnter={() => setHoverIndex(index)}
                             onMouseLeave={() => setHoverIndex(null)}
@@ -62,13 +71,13 @@ function FeedPost({ post }) {
 
             {/* Meta section */}
             <div className="flex flex-col items-end gap-3 shrink-0">
-                <Badge status={status} />
+                <Badge status={postStatus} />
                 <div className="flex flex-col items-end gap-0.5 text-xs font-medium text-gray-400">
                     <span className="text-gray-500">
-                        Author ID: <span className="text-gray-700 font-semibold">{authorId}</span>
+                        Author: <span className="text-gray-700 font-semibold">{authorUsername}</span>
                     </span>
-                    <span>
-                        Created at: <span className="text-gray-700 font-semibold">{createdAt}</span>
+                    <span className="text-gray-500">
+                        Modified at: <span className="text-gray-700 font-semibold">{updatedAt}</span>
                     </span>
                 </div>
             </div>

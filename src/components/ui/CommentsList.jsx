@@ -54,12 +54,12 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, isLoggedIn
                                 onChange={(e) => setNewComment(e.target.value)}
                                 placeholder="Add a comment (10–100 chars)..."
                                 maxLength={100}
-                                className="input-field text-xs !py-2 !px-3 flex-1"
+                                className="input-field text-xs py-2! px-3! flex-1"
                             />
                             <button
                                 type="submit"
                                 disabled={newComment.length < 10}
-                                className="btn-primary !text-xs !px-3 !py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="btn-primary text-xs! px-3! py-2! disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Post
                             </button>

@@ -9,10 +9,11 @@ import NavBar from "../../components/NavBar"
 
 export default function QuestionDetailPage() {
     const { postId } = useParams()
-    const { userProfile, loading, setLoading } = useUserContext()
+    const { userProfile } = useUserContext()
     const [question, setQuestion] = useState(null)
     const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
     const [answerBody, setAnswerBody] = useState("")
+    const [loading, setLoading] = useState()
 
     const isLoggedIn = !!userProfile?.username
 
@@ -21,8 +22,7 @@ export default function QuestionDetailPage() {
     }, [postId])
 
     const fetchQuestion = async () => {
-        const data = await apiCall.getQuestionDetails(postId, setLoading)
-        setQuestion(data)
+        const data = await apiCall.getQuestionDetails(postId, setLoading, setQuestion)
     }
 
     // ── Vote handler ──

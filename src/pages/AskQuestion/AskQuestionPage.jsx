@@ -55,8 +55,7 @@ export default function AskQuestionPage() {
     useEffect(() => {
         if (userProfile?.username && !tagsFetched) {
             const fetchTags = async () => {
-                const tags = await apiCall.getAllTags(setLoading)
-                setAvailableTags(tags)
+                await apiCall.getAllTags(setLoading, setAvailableTags)
                 setTagsFetched(true)
             }
             fetchTags()
