@@ -2,17 +2,17 @@ import api from "../util/axiosConfig"
 import logging from "../util/logHandler"
 
 // ── Feed ──────────────────────────────────────────────────────
-const getFeed = async (setLoading) => {
+const getFeed = async (setLoading, setFeedData) => {
     setLoading(true)
 
     try {
         const response = await api.get("/")
 
-        return response
+        await setFeedData(response?.data || [])
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -20,13 +20,18 @@ const getFeed = async (setLoading) => {
 
 // ── Auth ──────────────────────────────────────────────────────
 const loginUser = async (loginRequestData, setLoading, navigate, setUserProfile) => {
+    setLoading(true)
+
     try {
         const response = await api.post("/auth/login", loginRequestData)
 
         await getUserDetails(setLoading, setUserProfile)
         navigate("/")
+        return response?.data
     } catch (ex) {
-        logging.errorHandler(ex ? ex.response : "Network error")
+        logging.errorHandler(ex?.response?.data)
+
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -39,8 +44,11 @@ const registerUser = async (registerRequestData, setLoading, navigate) => {
         const response = await api.post("/auth/register", registerRequestData)
 
         navigate("/")
+        return response?.data
     } catch (ex) {
-        logging.errorHandler(ex ? ex.response : "Network error")
+        logging.errorHandler(ex?.response?.data)
+
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -54,9 +62,9 @@ const terminateSession = async (setLoading, setUserProfile) => {
 
         setUserProfile({})
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -69,90 +77,92 @@ const getUserDetails = async (setLoading, setUserProfile) => {
     try {
         const response = await api.get("/profile")
 
-        setUserProfile(response?.data ? response.data : {})
+        setUserProfile(response?.data || {})
     } catch (ex) {
-        logging.errorHandler(ex ? ex.response : "Network error")
+        logging.errorHandler(ex?.response?.data)
+
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
 }
 
-const getUserProfile = async (username, setLoading) => {
+const getUserProfile = async (username, setLoading, setUserProfile) => {
     setLoading(true)
 
     try {
         const response = await api.get(`/profile/${username}`)
 
-        return response?.data ? response.data : {}
+        setUserProfile(response?.data || {})
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
 }
 
-const getUserQuestion = async (username, setLoading) => {
+const getUserQuestion = async (username, setLoading, setUserQuestions) => {
     setLoading(true)
 
     try {
         const response = await api.get(`/profile/${username}/questions`)
 
-        return response?.data ? response.data : []
+        setUserQuestions(response.data || [])
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
 }
 
-const getUserAnswer = async (username, setLoading) => {
+const getUserAnswer = async (username, setLoading, setUserAnswers) => {
     setLoading(true)
 
     try {
         const response = await api.get(`/profile/${username}/answers`)
 
-        return response?.data ? response.data : []
+        setUserAnswers(response?.data || [])
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
 }
 
-const getUserComment = async (username, setLoading) => {
+const getUserComment = async (username, setLoading, setUserComments) => {
     setLoading(true)
 
     try {
         const response = await api.get(`/profile/${username}/comments`)
 
-        return response?.data ? response.data : []
+        setUserComments(response.data || [])
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
 }
 
 // ── Posts ──────────────────────────────────────────────────────
-const getQuestionDetails = async (postId, setLoading) => {
+const getQuestionDetails = async (postId, setLoading, setQuestion) => {
     setLoading(true)
 
     try {
         const response = await api.get(`/post/${postId}`)
 
-        return response?.data ? response.data : {}
+        setQuestion(response.data || {})
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -167,11 +177,11 @@ const postQuestion = async (questionDetails, setLoading) => {
             questionDetails
         )
 
-        return response?.data ? response.data : ""
+        return response?.data
     } catch (ex) {
-        logging.errorHandler(ex?.response?.data?.message || ex.message || "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -186,11 +196,11 @@ const postAnswer = async (postId, body, setLoading) => {
             { body }
         )
 
-        return response?.data ? response.data : ""
+        response?.data
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -206,11 +216,11 @@ const postComment = async (commentDetails, setLoading) => {
             commentDetails
         )
 
-        return response?.data ? response.data : ""
+        return response?.data
     } catch (ex) {
-        logging.errorHandler(ex?.response?.data?.message || ex.message || "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -222,11 +232,11 @@ const deleteComment = async (commentId, setLoading) => {
     try {
         const response = await api.delete(`/comment/${commentId}`)
 
-        return response?.data ? response.data : ""
+        return response?.data
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -239,28 +249,28 @@ const submitVote = async (voteData, setLoading) => {
     try {
         const response = await api.post("/vote", voteData)
 
-        return response?.data ? response.data : ""
+        return response?.data
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
 }
 
 // ── Tags ──────────────────────────────────────────────────────
-const getAllTags = async (setLoading) => {
+const getAllTags = async (setLoading, setTags) => {
     setLoading(true)
 
     try {
         const response = await api.get("/tag")
 
-        return response?.data ? response.data : []
+        await setTags(response?.data || [])
     } catch (ex) {
-        logging.errorHandler(ex.message ? ex.message : "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
@@ -275,11 +285,11 @@ const createNewTag = async (tagData, setLoading) => {
             tagData
         )
 
-        return response?.data ? response.data : ""
+        return response?.data
     } catch (ex) {
-        logging.errorHandler(ex?.response?.data?.message || ex.message || "Network error")
+        logging.errorHandler(ex?.response?.data)
 
-        return ex
+        return ex?.response.data
     } finally {
         setLoading(false)
     }
