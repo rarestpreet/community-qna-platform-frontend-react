@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Badge from "./Badge"
 import TagPill from "./TagPill"
+import helperFunctions from "../../services/helperFunctions"
 
 /**
  * FeedPost — post card in the home feed.
@@ -20,11 +21,12 @@ function FeedPost({ post }) {
     const navigate = useNavigate()
     const { navigationPostId, authorUsername, title, score, updatedAt, postStatus, tags } = post
     const [hoverIndex, setHoverIndex] = useState(null)
+    const navigateTo = helperFunctions.encryptNavId(navigationPostId)
 
     return (
         <div
             key={navigationPostId}
-            onClick={() => navigate(`/question/${navigationPostId}`)}
+            onClick={() => navigate(`/question/${navigateTo}`)}
             className="group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm
                 flex gap-6 items-center w-full
                 hover:shadow-lg hover:border-brand-300 hover:-translate-y-0.5

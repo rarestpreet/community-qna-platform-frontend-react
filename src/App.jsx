@@ -27,7 +27,7 @@ function App() {
 
       <Route path="/ask" element={<AskQuestionPage />} />
 
-      <Route path="/question/:postId" element={<QuestionDetailPage />} />
+      <Route path="/question/:encryptedPostId" element={<QuestionDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
     </Routes>
