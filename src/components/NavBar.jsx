@@ -46,36 +46,29 @@ function NavBar() {
             {userProfile?.username ? (
                 <div className="relative" ref={dropDownRef}>
                     <div
-                        className="w-10 h-10 bg-black text-white font-medium text-xl rounded-full
-                            flex justify-center items-center cursor-pointer shadow select-none
-                            hover:ring-2 hover:ring-brand-300 transition-all"
+                        className={`w-10 h-10 bg-black text-white font-medium text-xl rounded-full
+                            flex justify-center items-center  shadow select-none
+                            hover:ring-2  transition-all
+                            ${isInProfileLayout ? "cursor-not-allowed" : "hover:ring-brand-300 cursor-pointer"}`}
                         onClick={() => setIsDropDownOpen(state => !state)}
                     >
                         {userProfile.username[0].toUpperCase()}
                     </div>
 
-                    {isDropDownOpen && (
+                    {!isInProfileLayout && isDropDownOpen && (
                         <div className="absolute shadow-xl bg-white rounded-xl border border-gray-100 p-1 top-14 right-0 z-50 min-w-48 flex flex-col gap-0.5
                             animate-[fadeIn_150ms_ease-out]">
 
                             {/* Profile — disabled in ProfileLayout */}
                             <div
-                                className={`flex items-center gap-2 py-2 px-3 text-sm font-medium rounded-lg transition-colors
-                                    ${isInProfileLayout
-                                        ? "text-gray-300 cursor-not-allowed select-none"
-                                        : "text-gray-700 hover:bg-gray-100 cursor-pointer"
-                                    }`}
+                                className="flex items-center gap-2 py-2 px-3 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:bg-gray-100 cursor-pointer"
                                 onClick={() => {
-                                    if (isInProfileLayout) return
                                     setIsDropDownOpen(false)
                                     navigate(`/profile/${userProfile.username}`)
                                 }}
                             >
                                 <FaUser className="text-sm" />
                                 Profile
-                                {isInProfileLayout && (
-                                    <span className="ml-auto text-[10px] text-gray-300 font-normal">current</span>
-                                )}
                             </div>
 
                             {/* Admin Dashboard (admin only) */}

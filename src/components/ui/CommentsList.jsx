@@ -10,7 +10,7 @@ import CommentItem from "./CommentItem"
  *   - onDeleteComment: (commentId: number) => Promise<void>
  *   - isLoggedIn: boolean
  */
-function CommentsList({ comments = [], onAddComment, onDeleteComment, isLoggedIn = false }) {
+function CommentsList({ comments = [], onAddComment, onDeleteComment, isLoggedIn = false, commentLoader }) {
     const [isOpen, setIsOpen] = useState(false)
     const [newComment, setNewComment] = useState("")
 
@@ -58,10 +58,10 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, isLoggedIn
                             />
                             <button
                                 type="submit"
-                                disabled={newComment.length < 10}
+                                disabled={!commentLoader && newComment.length < 10}
                                 className="btn-primary text-xs! px-3! py-2! disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Post
+                                {commentLoader ? "Loading" : "Post"}
                             </button>
                         </form>
                     )}

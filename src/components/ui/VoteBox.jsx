@@ -9,31 +9,43 @@ import { useUserContext } from "../../context/userContext"
  *   - onVote: (voteType: "UPVOTE" | "DOWNVOTE") => void
  *   - disabled: boolean (e.g. not logged in)
  */
-function VoteBox({ score, hasVoted = false, onVote, disabled }) {
+function VoteBox({ score, hasVoted = false, voteType, onVote, disabled, operable }) {
     const { userProfile } = useUserContext()
 
     return (
         <div className="flex flex-col items-center gap-1 p-2 shrink-0">
-            {userProfile?.username && (<button
+            {!operable && userProfile?.username && (<button
                 type="button"
                 onClick={() => onVote?.("UPVOTE")}
                 disabled={disabled}
-                className={`p-1 rounded transition-colors text-gray-400 hover:text-brand-500 ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                className={`p-1 rounded transition-colors
+                    ${voteType === "UPVOTE"
+                        ? "text-brand-500"
+                        : "text-gray-400 hover:text-brand-500"
+                    }
+                    ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                    `}
                 aria-label="Upvote"
             >
                 <FaArrowUp className="text-lg" />
             </button>
             )}
 
-            <div className="text-on-primary-container p-3 rounded-full text-center flex-1 md:flex-none">
+            <div className="text-on-primary-container bg-surface-container-lowest p-3 rounded-full text-center flex-1 md:flex-none">
                 <div className="text-lg font-black leading-none">{score ?? 0}</div> {/* ?? used for null or undefined (numeric value) */}
             </div>
 
-            {userProfile?.username && (<button
+            {!operable && userProfile?.username && (<button
                 type="button"
                 onClick={() => onVote?.("DOWNVOTE")}
                 disabled={disabled}
-                className={`p-1 rounded transition-colors text-gray-400 hover:text-danger-400 ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                className={`p-1 rounded transition-colors 
+                    ${voteType === "DOWNVOTE"
+                        ? "text-danger-500"
+                        : "text-gray-400 hover:text-danger-500"
+                    }
+                    ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+                    `}
                 aria-label="Downvote"
             >
                 <FaArrowDown className="text-lg" />
