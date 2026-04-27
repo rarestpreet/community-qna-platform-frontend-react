@@ -2,7 +2,9 @@ import VoteBox from "../../components/ui/VoteBox"
 import TagPill from "../../components/ui/TagPill"
 import Badge from "../../components/ui/Badge"
 import CommentsList from "../../components/ui/CommentsList"
+import ActionMenu from "../../components/ui/ActionMenu"
 import { useNavigate } from "react-router-dom"
+import apiCall from "../../services/apiCall"
 
 /**
  * QuestionCard — the main question display with vote box, title, body, tags, and comments.
@@ -27,11 +29,21 @@ import { useNavigate } from "react-router-dom"
  *   - onDeleteComment: (commentId) => void
  *   - isLoggedIn: boolean
  */
-function QuestionCard({ question, onVote, onAddComment, onDeleteComment, isLoggedIn, commentLoader }) {
+function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdateComment, isLoggedIn, commentLoader, onOperationSuccess }) {
     const navigate = useNavigate()
 
+    const handleEdit = async () => {
+        navigate("/ask", { state: { question } })
+    }
+
+    const handleDelete = async () => {
+        apiCall.deleteQuestion(question.postId)
+
+        navigate(-1)
+    }
+
     return (
-        <div className="card p-6 flex gap-4">
+        <div className="card p-6 flex gap-4 relative">
             {/* Vote column */}
             <VoteBox
                 score={question.score}
@@ -48,7 +60,9 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, isLogge
                     <h1 className="text-2xl font-bold text-gray-900 leading-tight">
                         {question.title}
                     </h1>
-                    <Badge status={question.postStatus} />
+                    <div className="flex items-center gap-2">
+                        <Badge status={question.postStatus} />
+                    </div>
                 </div>
 
                 <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap mb-4">
@@ -87,8 +101,17 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, isLogge
                     comments={question.comments || []}
                     onAddComment={onAddComment}
                     onDeleteComment={onDeleteComment}
+                    onUpdateComment={onUpdateComment}
                     isLoggedIn={isLoggedIn}
                     commentLoader={commentLoader}
+                />
+            </div>
+            <div className="absolute -top-3 -right-3 z-10">
+                <ActionMenu
+                    isLoggedIn={isLoggedIn}
+                    operable={question.operable}
+                    onEdit={() => handleEdit()}
+                    onDelete={() => handleDelete()}
                 />
             </div>
         </div>

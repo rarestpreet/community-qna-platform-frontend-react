@@ -7,13 +7,13 @@ import QuestionCard from "./QuestionCard"
 import AnswersList from "./AnswersList"
 import NavBar from "../../components/NavBar"
 import helperFunctions from "../../services/helperFunctions"
+import AnswerModal from "../../components/ui/AnswerModal"
 
 export default function QuestionDetailPage() {
     const { encryptedPostId } = useParams()
     const { userProfile } = useUserContext()
     const [question, setQuestion] = useState(null)
     const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
-    const [answerBody, setAnswerBody] = useState("")
     const [loading, setLoading] = useState(false)
     const [commentLoader, setCommentLoader] = useState(false)
 
@@ -40,16 +40,14 @@ export default function QuestionDetailPage() {
     }
 
     const handleDeleteComment = async (commentId) => {
-        await apiCall.deleteComment(commentId, setCommentLoader)
+        await apiCall.deleteComment(commentId, setLoading)
         await fetchQuestion()
     }
 
-    const handleSubmitAnswer = async (e) => {
-        e.preventDefault()
-        if (!answerBody.trim()) return
-        await apiCall.postAnswer(postId, answerBody, setLoading)
-        setAnswerBody("")
-        setIsAnswerModalOpen(false)
+    const handleUpdateComment = async (commentId, body) => {
+        console.log(commentId, body);
+
+        await apiCall.updateComment(commentId, body, setCommentLoader)
         await fetchQuestion()
     }
 
@@ -95,8 +93,12 @@ export default function QuestionDetailPage() {
                     onVote={(voteType) => handleVote(question.postId, voteType)}
                     onAddComment={(body) => handleAddComment(question.postId, body)}
                     onDeleteComment={handleDeleteComment}
+                    onUpdateComment={handleUpdateComment}
                     isLoggedIn={isLoggedIn}
                     commentLoader={commentLoader}
+                    onOperationSuccess={async () => {
+                        await fetchQuestion()
+                    }}
                 />
 
                 {/* Answer This Question button */}
@@ -118,43 +120,31 @@ export default function QuestionDetailPage() {
                         onVote={handleVote}
                         onAddComment={handleAddComment}
                         onDeleteComment={handleDeleteComment}
+                        onUpdateComment={handleUpdateComment}
                         onToggleStatus={handleToggleAnswerStatus}
                         isLoggedIn={isLoggedIn}
                         commentLoader={commentLoader}
                         operable={question.operable}
                         canToggle={question.operable && !isClosed}
+                        setLoading={setLoading}
+                        onOperationSuccess={async () => {
+                            await fetchQuestion()
+                        }}
                     />
                 )}
             </div>
 
             {/* Answer Modal */}
             {isAnswerModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative
-                        animate-[fadeIn_150ms_ease-out]">
-                        <button
-                            onClick={() => setIsAnswerModalOpen(false)}
-                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-800 font-bold text-xl cursor-pointer"
-                        >
-                            ✕
-                        </button>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                            Write Your Answer
-                        </h2>
-                        <form onSubmit={handleSubmitAnswer} className="flex flex-col gap-4">
-                            <textarea
-                                value={answerBody}
-                                onChange={(e) => setAnswerBody(e.target.value)}
-                                placeholder="Share your knowledge..."
-                                rows={6}
-                                className="input-field resize-none"
-                            />
-                            <button type="submit" className="btn-primary w-full">
-                                Submit Answer
-                            </button>
-                        </form>
-                    </div>
-                </div>
+                <AnswerModal
+                    initialBody=""
+                    onClose={async () => {
+                        setIsAnswerModalOpen(false)
+                        await fetchQuestion()
+                    }}
+                    operation="POST"
+                    postId={postId}
+                />
             )}
         </div>
     )

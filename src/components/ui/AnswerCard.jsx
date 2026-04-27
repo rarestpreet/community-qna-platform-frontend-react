@@ -1,6 +1,10 @@
 import VoteBox from "./VoteBox"
 import CommentsList from "./CommentsList"
+import ActionMenu from "../../components/ui/ActionMenu"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import AnswerModal from "./AnswerModal"
+import apiCall from "../../services/apiCall"
 
 /**
  * AnswerCard — individual answer with vote box, body, and comments.
@@ -22,18 +26,17 @@ import { useNavigate } from "react-router-dom"
  *   - onDeleteComment: (commentId) => void
  *   - isLoggedIn: boolean
  */
-function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onToggleStatus, isLoggedIn, commentLoader, operable, canToggle }) {
-    const isAccepted = answer.postStatus === "ACCEPTED"
+function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateComment, onToggleStatus, isLoggedIn, commentLoader, operable, canToggle, setLoading, onOperationSuccess }) {
+    const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
     const navigate = useNavigate()
+    const isAccepted = answer.postStatus === "ACCEPTED"
 
     const handleStatusToggle = () => {
-        console.log(answer.postId);
-
         onToggleStatus(answer.postId)
     }
 
     return (
-        <div className={`flex gap-4 p-5 rounded-xl border transition-all duration-200 ${isAccepted
+        <div className={`relative flex gap-4 p-5 rounded-xl border transition-all duration-200 ${isAccepted
             ? "border-l-4 border-l-brand-500 border-brand-200"
             : "bg-white border-gray-100 hover:border-brand-300 hover:shadow-sm"
             }`}>
@@ -48,19 +51,15 @@ function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onToggleSta
                     operable={answer.operable}
                 />
                 <button
-                    className={`group flex flex-col items-center justify-center rounded-xl p-2 shrink-0 transition-colors ${
-                        isAccepted ? "bg-brand-50 border-brand-100" : "bg-gray-50 border border-gray-100"
-                    } ${
-                        operable && (canToggle || isAccepted) ? "cursor-pointer" + (!isAccepted ? " hover:bg-brand-50 hover:border-brand-100" : "") : ""
-                    }`}
+                    className={`group flex flex-col items-center justify-center rounded-xl p-2 shrink-0 transition-colors ${isAccepted ? "bg-brand-50 border-brand-100" : "bg-gray-50 border border-gray-100"
+                        } ${operable && (canToggle || isAccepted) ? "cursor-pointer" + (!isAccepted ? " hover:bg-brand-50 hover:border-brand-100" : "") : ""
+                        }`}
                     disabled={!(operable && (canToggle || isAccepted))}
                     onClick={() => handleStatusToggle()}
                 >
-                    <span className={`font-bold text-xl leading-none mb-1 transition-colors ${
-                        isAccepted ? "text-brand-600" : "text-black"
-                    } ${
-                        operable && (canToggle || isAccepted) && !isAccepted ? "group-hover:text-brand-600" : ""
-                    }`}>
+                    <span className={`font-bold text-xl leading-none mb-1 transition-colors ${isAccepted ? "text-brand-600" : "text-black"
+                        } ${operable && (canToggle || isAccepted) && !isAccepted ? "group-hover:text-brand-600" : ""
+                        }`}>
                         {answer.postStatus.charAt(0)}
                     </span>
                     <span className="text-xs font-semibold text-gray-400 uppercase">
@@ -71,9 +70,11 @@ function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onToggleSta
 
             {/* Content */}
             <div className="flex flex-col flex-1 gap-2 min-w-0">
-                <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap">
-                    {answer.body}
-                </p>
+                <div className="flex items-start justify-between gap-4">
+                    <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap flex-1 mt-1">
+                        {answer.body}
+                    </p>
+                </div>
 
                 <div className="flex items-center justify-end gap-2 text-xs font-medium text-gray-400">
                     <div className="flex flex-col gap-1 items-end">
@@ -99,10 +100,35 @@ function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onToggleSta
                     comments={answer.comments || []}
                     onAddComment={onAddComment}
                     onDeleteComment={onDeleteComment}
+                    onUpdateComment={onUpdateComment}
                     isLoggedIn={isLoggedIn}
                     commentLoader={commentLoader}
                 />
             </div>
+            <div className="absolute -top-3 -right-3 z-10">
+                <ActionMenu
+                    isLoggedIn={isLoggedIn}
+                    operable={answer.operable}
+                    onEdit={() => setIsAnswerModalOpen(true)}
+                    onDelete={async () => {
+                        await apiCall.deleteAnswer(answer.postId, setLoading)
+                        onOperationSuccess()
+                    }}
+                />
+            </div>
+
+            {/* Answer Modal */}
+            {isAnswerModalOpen && (
+                <AnswerModal
+                    initialBody={answer.body}
+                    onClose={async () => {
+                        setIsAnswerModalOpen(false)
+                        if (onOperationSuccess) await onOperationSuccess()
+                    }}
+                    operation="PUT"
+                    postId={answer.postId}
+                />
+            )}
         </div>
     )
 }

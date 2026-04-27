@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import { FaTag, FaCheckCircle, FaQuestionCircle, FaLightbulb, FaAlignLeft } from "react-icons/fa"
 import TagPill from "../../components/ui/TagPill"
 import apiCall from "../../services/apiCall"
@@ -34,13 +34,17 @@ function FieldHint({ icon: Icon, children }) {
 }
 
 /* ── Page ────────────────────────────────────────────────────── */
-export default function AskQuestionPage() {
+export default function AskQuestionPage({ initialBody = "" }) {
     const navigate = useNavigate()
+    const location = useLocation()
     const { loading, userProfile, setLoading } = useUserContext()
 
-    const [title, setTitle] = useState("")
-    const [body, setBody] = useState("")
-    const [selectedTagIds, setSelectedTagIds] = useState([])
+    const editingQuestion = location.state?.question
+    const isEditMode = !!editingQuestion
+
+    const [title, setTitle] = useState(editingQuestion?.title || "")
+    const [body, setBody] = useState(editingQuestion?.body || initialBody)
+    const [selectedTagIds, setSelectedTagIds] = useState(editingQuestion?.tags?.map(t => t.tagId) || [])
     const [errors, setErrors] = useState({})
     const [availableTags, setAvailableTags] = useState([])
     const [tagsFetched, setTagsFetched] = useState(false)
@@ -98,11 +102,18 @@ export default function AskQuestionPage() {
             return
         }
         setErrors({})
-        await apiCall.postQuestion({ title, body, tagIds: selectedTagIds }, setLoading)
+        
+        if (isEditMode) {
+            await apiCall.updateQuestion(editingQuestion.postId, { title, body, tagIds: selectedTagIds }, setLoading)
+            navigate(-1)
+        } else {
+            await apiCall.postQuestion({ title, body, tagIds: selectedTagIds }, setLoading)
+            navigate("/")
+        }
+        
         setSelectedTagIds([])
         setBody("")
         setTitle("")
-        navigate("/")
     }
 
     const toggleTag = (tagId) => {
@@ -123,7 +134,9 @@ export default function AskQuestionPage() {
                     <section className="card p-6 flex flex-col gap-4">
                         <div className="flex items-center gap-2 mb-1">
                             <FaQuestionCircle className="text-brand-500" />
-                            <h2 className="font-bold text-gray-800 text-lg">Question Title</h2>
+                            <h2 className="font-bold text-gray-800 text-lg">
+                                {isEditMode ? "Edit Question Title" : "Question Title"}
+                            </h2>
                         </div>
 
                         <FieldHint icon={FaLightbulb}>
@@ -237,7 +250,7 @@ export default function AskQuestionPage() {
                             Cancel
                         </button>
                         <button type="submit" className="btn-primary">
-                            Post Your Question
+                            {isEditMode ? "Save Changes" : "Post Your Question"}
                         </button>
                     </div>
                 </form>
