@@ -14,7 +14,7 @@ function VoteBox({ score, hasVoted = false, voteType, onVote, disabled, operable
 
     return (
         <div className="flex flex-col items-center gap-1 p-2 shrink-0">
-            {!operable && userProfile?.username && (<button
+            {!operable && !disabled && (<button
                 type="button"
                 onClick={() => onVote?.("UPVOTE")}
                 disabled={disabled}
@@ -35,7 +35,7 @@ function VoteBox({ score, hasVoted = false, voteType, onVote, disabled, operable
                 <div className="text-lg font-black leading-none">{score ?? 0}</div> {/* ?? used for null or undefined (numeric value) */}
             </div>
 
-            {!operable && userProfile?.username && (<button
+            {!operable && !disabled && (<button
                 type="button"
                 onClick={() => onVote?.("DOWNVOTE")}
                 disabled={disabled}
