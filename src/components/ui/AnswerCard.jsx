@@ -26,7 +26,7 @@ import apiCall from "../../services/apiCall"
  *   - onDeleteComment: (commentId) => void
  *   - isLoggedIn: boolean
  */
-function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateComment, onToggleStatus, isLoggedIn, commentLoader, operable, canToggle, setLoading, onOperationSuccess }) {
+function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateComment, onToggleStatus, isLoggedIn, commentLoader, operable, setLoading, onOperationSuccess }) {
     const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
     const navigate = useNavigate()
     const isAccepted = answer.postStatus === "ACCEPTED"
@@ -52,13 +52,13 @@ function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateCom
                 />
                 <button
                     className={`group flex flex-col items-center justify-center rounded-xl p-2 shrink-0 transition-colors ${isAccepted ? "bg-brand-50 border-brand-100" : "bg-gray-50 border border-gray-100"
-                        } ${operable && (canToggle || isAccepted) ? "cursor-pointer" + (!isAccepted ? " hover:bg-brand-50 hover:border-brand-100" : "") : ""
+                        } ${operable ? "cursor-pointer" + (!isAccepted ? " hover:bg-brand-50 hover:border-brand-100" : "") : ""
                         }`}
-                    disabled={!(operable && (canToggle || isAccepted))}
+                    disabled={!operable}
                     onClick={() => handleStatusToggle()}
                 >
                     <span className={`font-bold text-xl leading-none mb-1 transition-colors ${isAccepted ? "text-brand-600" : "text-black"
-                        } ${operable && (canToggle || isAccepted) && !isAccepted ? "group-hover:text-brand-600" : ""
+                        } ${operable && !isAccepted ? "group-hover:text-brand-600" : ""
                         }`}>
                         {answer.postStatus.charAt(0)}
                     </span>

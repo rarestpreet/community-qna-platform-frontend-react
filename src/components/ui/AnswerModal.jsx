@@ -10,8 +10,6 @@ function AnswerModal({ initialBody = "", onClose, operation, postId }) {
         if (!body.trim())
             return
 
-        console.log(operation === "PUT");
-
         if (operation === "POST")
             await apiCall.postAnswer(postId, body, setLoading)
         else

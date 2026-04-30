@@ -125,7 +125,6 @@ export default function QuestionDetailPage() {
                         isLoggedIn={isLoggedIn}
                         commentLoader={commentLoader}
                         operable={question.operable}
-                        canToggle={question.operable && !isClosed}
                         setLoading={setLoading}
                         onOperationSuccess={async () => {
                             await fetchQuestion()
