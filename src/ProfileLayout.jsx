@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from "react-router-dom"
+import { Outlet, useLocation, useNavigate } from "react-router-dom"
 import SideNavBar from "./components/SideNavBar"
 import { useUserContext } from "./context/userContext"
 import PageLoader from "./components/ui/PageLoader"
@@ -7,15 +7,34 @@ import UserProfileContextProvider from "./components/UserProfileContextProvider"
 function ProfileLayout() {
     const { loading, userProfile } = useUserContext()
     const navigate = useNavigate()
+    const location = useLocation()
 
-    // Only show full-page loader if it's the very first time we're fetching user details
     const isInitialLoading = loading && !userProfile?.username
 
     if (isInitialLoading) {
         return <PageLoader />
     }
-    if (!userProfile?.username) {
-        navigate("/login")
+
+    const path = ["edit", "verify-email", "reset-password"]
+
+    if (path.includes(location.pathname.split("/").at(3) || "")) {
+        if (!userProfile?.username) {
+            navigate("/login")
+            return null
+        }
+    }
+
+    if (path.includes(location.pathname.split("/").at(3))) {
+        if (userProfile?.username !== location.pathname.split("/").at(2)) {
+            navigate(`/profile/${userProfile?.username}`)
+            return null
+        }
+    }
+
+    if (location.pathname.includes("verify-email") &&
+        userProfile?.accountVerified) {
+        navigate(`/profile/${userProfile?.username}`)
+        return null
     }
 
     return (
