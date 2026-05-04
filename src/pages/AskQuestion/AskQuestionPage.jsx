@@ -80,17 +80,17 @@ export default function AskQuestionPage({ initialBody = "" }) {
     const validate = () => {
         const errs = {}
         if (!title.trim()) errs.title = "Question title is required."
-        else if (title.length < 15 || title.length > 150)
+        else if (title.length < 50 || title.length > 150)
             errs.title = "Title must be between 15 and 150 characters."
 
         if (!body.trim()) errs.body = "Description is required."
-        else if (body.length < 50 || body.length > 500)
+        else if (body.length < 200 || body.length > 2000)
             errs.body = "Description must be between 50 and 500 characters."
 
         if (selectedTagIds.length === 0)
             errs.tags = "At least one tag is required."
-        else if (selectedTagIds.length > 10)
-            errs.tags = "You can select up to 10 tags."
+        else if (selectedTagIds.length > 5)
+            errs.tags = "You can select up to 5 tags."
 
         return errs
     }
@@ -103,7 +103,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
             return
         }
         setErrors({})
-        
+
         if (isEditMode) {
             await apiCall.updateQuestion(editingQuestion.postId, { title, body, tagIds: selectedTagIds }, setLoading)
             navigate(-1)
@@ -111,7 +111,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
             await apiCall.postQuestion({ title, body, tagIds: selectedTagIds }, setLoading)
             navigate("/")
         }
-        
+
         setSelectedTagIds([])
         setBody("")
         setTitle("")
@@ -120,7 +120,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
     const toggleTag = (tagId) => {
         setSelectedTagIds((prev) => {
             if (prev.includes(tagId)) return prev.filter((id) => id !== tagId)
-            if (prev.length >= 10) return prev
+            if (prev.length >= 5) return prev
             return [...prev, tagId]
         })
     }
@@ -192,7 +192,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
                                 onChange={(e) => setBody(e.target.value)}
                                 placeholder="Describe your problem in detail. What have you tried so far?"
                                 rows={7}
-                                maxLength={500}
+                                maxLength={2000}
                                 className={`input-field resize-none ${errors.body ? "input-error" : ""}`}
                             />
                             {errors.body && (

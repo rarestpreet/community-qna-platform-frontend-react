@@ -18,7 +18,7 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateCo
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!newComment.trim() || newComment.length < 10) return
+        if (!newComment.trim() || newComment.length < 20) return
 
         if (editingCommentId) {
             await onUpdateComment?.(editingCommentId, newComment)
@@ -76,8 +76,8 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateCo
                                         handleCancelEdit()
                                     }
                                 }}
-                                placeholder={editingCommentId ? "Edit your comment..." : "Add a comment (10–100 chars)..."}
-                                maxLength={100}
+                                placeholder={editingCommentId ? "Edit your comment..." : "Add a comment (20–200 chars)..."}
+                                maxLength={200}
                                 className="input-field text-xs py-2! px-3! flex-1"
                             />
                             {editingCommentId && (
@@ -91,7 +91,7 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateCo
                             )}
                             <button
                                 type="submit"
-                                disabled={!commentLoader && newComment.length < 10}
+                                disabled={!commentLoader && newComment.length < 20}
                                 className="btn-primary text-xs! px-3! py-2! disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {commentLoader ? "Loading" : (editingCommentId ? "Update" : "Post")}
