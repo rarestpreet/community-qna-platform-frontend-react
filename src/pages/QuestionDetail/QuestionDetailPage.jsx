@@ -35,8 +35,9 @@ export default function QuestionDetailPage() {
 
     // ── Comment handlers ──
     const handleAddComment = async (targetPostId, body) => {
-        await apiCall.postComment({ postId: targetPostId, body }, setCommentLoader)
+        const result = await apiCall.postComment({ postId: targetPostId, body }, setCommentLoader)
         await fetchQuestion()
+        return result
     }
 
     const handleDeleteComment = async (commentId) => {
@@ -45,8 +46,9 @@ export default function QuestionDetailPage() {
     }
 
     const handleUpdateComment = async (commentId, body) => {
-        await apiCall.updateComment(commentId, body, setCommentLoader)
+        const result = await apiCall.updateComment(commentId, body, setCommentLoader)
         await fetchQuestion()
+        return result
     }
 
     const handleToggleAnswerStatus = async (answerId) => {

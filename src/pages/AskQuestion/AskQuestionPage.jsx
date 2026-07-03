@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { FaTag, FaCheckCircle, FaQuestionCircle, FaLightbulb, FaAlignLeft } from "react-icons/fa"
+import { FaTag, FaCheckCircle, FaQuestionCircle, FaLightbulb, FaAlignLeft, FaExclamationCircle } from "react-icons/fa"
 import TagPill from "../../components/ui/TagPill"
 import apiCall from "../../services/apiCall"
 import { useUserContext } from "../../context/userContext"
@@ -46,6 +46,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
     const [body, setBody] = useState(editingQuestion?.body || initialBody)
     const [selectedTagIds, setSelectedTagIds] = useState(editingQuestion?.tags?.map(t => t.tagId) || [])
     const [errors, setErrors] = useState({})
+    const [submitError, setSubmitError] = useState("")
     const [availableTags, setAvailableTags] = useState([])
     const [tagsFetched, setTagsFetched] = useState(false)
 
@@ -81,11 +82,11 @@ export default function AskQuestionPage({ initialBody = "" }) {
         const errs = {}
         if (!title.trim()) errs.title = "Question title is required."
         else if (title.length < 50 || title.length > 150)
-            errs.title = "Title must be between 15 and 150 characters."
+            errs.title = "Title must be between 50 and 150 characters."
 
         if (!body.trim()) errs.body = "Description is required."
         else if (body.length < 200 || body.length > 2000)
-            errs.body = "Description must be between 50 and 500 characters."
+            errs.body = "Description must be between 200 and 2000 characters."
 
         if (selectedTagIds.length === 0)
             errs.tags = "At least one tag is required."
@@ -103,12 +104,21 @@ export default function AskQuestionPage({ initialBody = "" }) {
             return
         }
         setErrors({})
+        setSubmitError("")
 
         if (isEditMode) {
-            await apiCall.updateQuestion(editingQuestion.postId, { title, body, tagIds: selectedTagIds }, setLoading)
+            const result = await apiCall.updateQuestion(editingQuestion.postId, { title, body, tagIds: selectedTagIds }, setLoading)
+            if (result && typeof result !== "string") {
+                setSubmitError(result?.message || "Failed to update question. Please try again.")
+                return
+            }
             navigate(-1)
         } else {
-            await apiCall.postQuestion({ title, body, tagIds: selectedTagIds }, setLoading)
+            const result = await apiCall.postQuestion({ title, body, tagIds: selectedTagIds }, setLoading)
+            if (result && typeof result !== "string") {
+                setSubmitError(result?.message || "Failed to post question. Please try again.")
+                return
+            }
             navigate("/")
         }
 
@@ -150,7 +160,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
                                 <label htmlFor="question-title" className="text-sm font-semibold text-gray-700">
                                     Title <span className="text-red-500">*</span>
                                 </label>
-                                <CharCounter current={title.length} min={15} max={150} />
+                                <CharCounter current={title.length} min={50} max={150} />
                             </div>
                             <input
                                 id="question-title"
@@ -184,7 +194,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
                                 <label htmlFor="question-body" className="text-sm font-semibold text-gray-700">
                                     Description <span className="text-red-500">*</span>
                                 </label>
-                                <CharCounter current={body.length} min={50} max={500} />
+                                <CharCounter current={body.length} min={200} max={2000} />
                             </div>
                             <textarea
                                 id="question-body"
@@ -242,17 +252,25 @@ export default function AskQuestionPage({ initialBody = "" }) {
                     </section>
 
                     {/* Submit */}
-                    <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                        <button
-                            type="button"
-                            onClick={() => navigate(-1)}
-                            className="btn-secondary"
-                        >
-                            Cancel
-                        </button>
-                        <button type="submit" className="btn-primary">
-                            {isEditMode ? "Save Changes" : "Post Your Question"}
-                        </button>
+                    <div className="flex flex-col gap-3">
+                        {submitError && (
+                            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium animate-[fadeIn_200ms_ease-out]">
+                                <FaExclamationCircle className="shrink-0 text-red-500" />
+                                {submitError}
+                            </div>
+                        )}
+                        <div className="flex flex-col sm:flex-row gap-3 justify-end">
+                            <button
+                                type="button"
+                                onClick={() => navigate(-1)}
+                                className="btn-secondary"
+                            >
+                                Cancel
+                            </button>
+                            <button type="submit" disabled={loading} className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed">
+                                {loading ? "Saving…" : isEditMode ? "Save Changes" : "Post Your Question"}
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>

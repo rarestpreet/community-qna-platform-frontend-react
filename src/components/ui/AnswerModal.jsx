@@ -37,10 +37,17 @@ function AnswerModal({ initialBody = "", onClose, operation, postId }) {
 
         setError("")
 
+        let result
         if (operation === "POST")
-            await apiCall.postAnswer(postId, body, setLoading)
+            result = await apiCall.postAnswer(postId, body, setLoading)
         else
-            await apiCall.updateAnswer(postId, body, setLoading)
+            result = await apiCall.updateAnswer(postId, body, setLoading)
+
+        // If result is an error object, show it and keep modal open
+        if (result && typeof result !== "string") {
+            setError(result?.message || "Something went wrong. Please try again.")
+            return
+        }
 
         onClose()
     }

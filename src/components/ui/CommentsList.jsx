@@ -1,12 +1,12 @@
 import { useState, useRef } from "react"
-import { FaChevronDown, FaChevronUp } from "react-icons/fa"
+import { FaChevronDown, FaChevronUp, FaExclamationCircle } from "react-icons/fa"
 import CommentItem from "./CommentItem"
 
 /**
  * CommentsList — collapsible comments section with add-comment form.
  * Props:
  *   - comments: CommentResponseDTO[]
- *   - onAddComment: (body: string) => Promise<void>
+ *   - onAddComment: (body: string) => Promise<any>
  *   - onDeleteComment: (commentId: number) => Promise<void>
  *   - isLoggedIn: boolean
  */
@@ -14,24 +14,44 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateCo
     const [isOpen, setIsOpen] = useState(false)
     const [newComment, setNewComment] = useState("")
     const [editingCommentId, setEditingCommentId] = useState(null)
+    const [commentError, setCommentError] = useState("")
     const inputRef = useRef(null)
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!newComment.trim() || newComment.length < 20) return
+        setCommentError("")
 
-        if (editingCommentId) {
-            await onUpdateComment?.(editingCommentId, newComment)
-            setEditingCommentId(null)
-        } else {
-            await onAddComment?.(newComment)
+        if (!newComment.trim()) {
+            setCommentError("Comment cannot be empty.")
+            return
         }
+        if (newComment.length < 20) {
+            setCommentError("Comment must be at least 20 characters.")
+            return
+        }
+
+        let result
+        if (editingCommentId) {
+            result = await onUpdateComment?.(editingCommentId, newComment)
+        } else {
+            result = await onAddComment?.(newComment)
+        }
+
+        // If the API returned an error object, show it and preserve draft
+        if (result && typeof result !== "string") {
+            setCommentError(result?.message || "Failed to post comment. Please try again.")
+            return
+        }
+
+        // Success — clear the form
         setNewComment("")
+        setEditingCommentId(null)
     }
 
     const handleCancelEdit = () => {
         setEditingCommentId(null)
         setNewComment("")
+        setCommentError("")
     }
 
     return (
@@ -57,6 +77,7 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateCo
                             onEdit={(c) => {
                                 setEditingCommentId(c.commentId)
                                 setNewComment(c.body)
+                                setCommentError("")
                                 setTimeout(() => inputRef.current?.focus(), 0)
                             }}
                             isLoggedIn={isLoggedIn}
@@ -65,38 +86,47 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateCo
 
                     {/* Add comment form */}
                     {isLoggedIn && (
-                        <form onSubmit={handleSubmit} className="flex gap-2 pt-3 mt-2">
-                            <input
-                                ref={inputRef}
-                                type="text"
-                                value={newComment}
-                                onChange={(e) => {
-                                    setNewComment(e.target.value)
-                                    if (e.target.value === "" && editingCommentId) {
-                                        handleCancelEdit()
-                                    }
-                                }}
-                                placeholder={editingCommentId ? "Edit your comment..." : "Add a comment (20–200 chars)..."}
-                                maxLength={200}
-                                className="input-field text-xs py-2! px-3! flex-1"
-                            />
-                            {editingCommentId && (
+                        <div className="flex flex-col gap-1 pt-3 mt-2">
+                            <form onSubmit={handleSubmit} className="flex gap-2">
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    value={newComment}
+                                    onChange={(e) => {
+                                        setNewComment(e.target.value)
+                                        setCommentError("")
+                                        if (e.target.value === "" && editingCommentId) {
+                                            handleCancelEdit()
+                                        }
+                                    }}
+                                    placeholder={editingCommentId ? "Edit your comment..." : "Add a comment (20–200 chars)..."}
+                                    maxLength={200}
+                                    className={`input-field text-xs py-2! px-3! flex-1 ${commentError ? "input-error" : ""}`}
+                                />
+                                {editingCommentId && (
+                                    <button
+                                        type="button"
+                                        onClick={handleCancelEdit}
+                                        className="btn-secondary text-xs! px-3! py-2!"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
                                 <button
-                                    type="button"
-                                    onClick={handleCancelEdit}
-                                    className="btn-secondary text-xs! px-3! py-2!"
+                                    type="submit"
+                                    disabled={commentLoader || newComment.length < 20}
+                                    className="btn-primary text-xs! px-3! py-2! disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Cancel
+                                    {commentLoader ? "Loading" : (editingCommentId ? "Update" : "Post")}
                                 </button>
+                            </form>
+                            {commentError && (
+                                <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium px-1">
+                                    <FaExclamationCircle className="shrink-0" />
+                                    {commentError}
+                                </p>
                             )}
-                            <button
-                                type="submit"
-                                disabled={!commentLoader && newComment.length < 20}
-                                className="btn-primary text-xs! px-3! py-2! disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {commentLoader ? "Loading" : (editingCommentId ? "Update" : "Post")}
-                            </button>
-                        </form>
+                        </div>
                     )}
                 </div>
             )}
