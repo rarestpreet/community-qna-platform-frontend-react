@@ -1,5 +1,6 @@
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
+import { FaExclamationCircle, FaInfoCircle } from "react-icons/fa"
 import AuthInput from "../../components/ui/AuthInput"
 import BrandContainer from "../../components/ui/BrandContainer"
 import apiCall from "../../services/apiCall"
@@ -8,18 +9,27 @@ import { useUserContext } from "../../context/userContext"
 function LoginPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
-    const [errors, setErrors] = useState({})
+    const [loginError, setLoginError] = useState("")
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const { loading, setLoading, setUserProfile } = useUserContext()
+
+    const sessionExpired = searchParams.get("expired") === "true"
 
     const handleLogin = async (e) => {
         e.preventDefault()
+        setLoginError("")
 
-        setErrors({})
         const response = await apiCall.loginUser({
             email: email,
             password: password
         }, setLoading, navigate, setUserProfile)
+
+        // If response is an error object (not a plain string success message)
+        if (response && typeof response !== "string") {
+            const msg = response?.message || "Login failed. Please try again."
+            setLoginError(msg)
+        }
     }
 
     return (
@@ -57,6 +67,22 @@ function LoginPage() {
                             Sign in to continue to HearMeOut
                         </p>
 
+                        {/* Session expired notice */}
+                        {sessionExpired && (
+                            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl px-4 py-3 text-sm font-medium mb-5 animate-[fadeIn_200ms_ease-out]">
+                                <FaInfoCircle className="shrink-0 text-amber-500" />
+                                Your session has expired. Please sign in again.
+                            </div>
+                        )}
+
+                        {/* Login error banner */}
+                        {loginError && (
+                            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium mb-5 animate-[fadeIn_200ms_ease-out]">
+                                <FaExclamationCircle className="shrink-0 text-red-500" />
+                                {loginError}
+                            </div>
+                        )}
+
                         <form onSubmit={handleLogin} className="flex flex-col gap-5">
                             <AuthInput
                                 label="Email Address"
@@ -64,7 +90,6 @@ function LoginPage() {
                                 placeholder="you@example.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                error={errors.email}
                             />
                             <div className="flex flex-col gap-1">
                                 <AuthInput
@@ -73,7 +98,6 @@ function LoginPage() {
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    error={errors.password}
                                 />
                                 <Link
                                     className="self-end text-xs text-brand-600 hover:text-brand-700 hover:underline font-bold"

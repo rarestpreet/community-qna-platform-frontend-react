@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { FaExclamationCircle } from "react-icons/fa"
 import AuthInput from "../../components/ui/AuthInput"
 import BrandContainer from "../../components/ui/BrandContainer"
 import apiCall from "../../services/apiCall"
@@ -10,24 +11,38 @@ function RegisterPage() {
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [errors, setErrors] = useState({})
+    const [globalError, setGlobalError] = useState("")
     const navigate = useNavigate()
     const { loading, setLoading } = useUserContext()
 
     const validate = () => {
         const errs = {}
         if (!username.trim()) errs.username = "Username is required."
-        else if (username.length > 20) errs.username = "Username must be under 20 characters."
+        else if (username.length < 5 || username.length > 20) errs.username = "Username must be 5–20 characters."
 
         if (!email.trim()) errs.email = "Email is required."
 
         if (!password.trim()) errs.password = "Password is required."
-        else if (password.length < 8) errs.password = "Password must be at least 8 characters."
+        else if (password.length < 8 || password.length > 20) errs.password = "Password must be 8–20 characters."
 
+        return errs
+    }
+
+    /**
+     * Map backend fieldErrors array (each item is [fieldName, message])
+     * to our local errors state object.
+     */
+    const applyApiFieldErrors = (fieldErrors) => {
+        const errs = {}
+        fieldErrors?.forEach(([field, message]) => {
+            errs[field] = message
+        })
         return errs
     }
 
     const handleRegister = async (e) => {
         e.preventDefault()
+        setGlobalError("")
 
         const errs = validate()
         if (Object.keys(errs).length > 0) {
@@ -41,6 +56,20 @@ function RegisterPage() {
             email,
             password
         }, setLoading, navigate)
+
+        // Handle API errors — response is an error object when status !== 2xx
+        if (response && typeof response !== "string") {
+            if (response.fieldErrors?.length > 0) {
+                // Validation errors from backend — map to fields
+                setErrors(applyApiFieldErrors(response.fieldErrors))
+            } else if (response.error === "Username already exist") {
+                setErrors({ username: response.message || "This username is already taken." })
+            } else if (response.error === "Email already exist") {
+                setErrors({ email: response.message || "This email is already registered." })
+            } else {
+                setGlobalError(response.message || "Registration failed. Please try again.")
+            }
+        }
     }
 
     return (
@@ -76,13 +105,21 @@ function RegisterPage() {
                             Sign up for a free HearMeOut account
                         </p>
 
+                        {/* Global error banner */}
+                        {globalError && (
+                            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium mb-5 animate-[fadeIn_200ms_ease-out]">
+                                <FaExclamationCircle className="shrink-0 text-red-500" />
+                                {globalError}
+                            </div>
+                        )}
+
                         <form onSubmit={handleRegister} className="flex flex-col gap-5">
                             <AuthInput
                                 label="Username"
                                 type="text"
                                 placeholder="your_username"
                                 value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                onChange={(e) => { setUsername(e.target.value); setErrors(p => ({ ...p, username: "" })) }}
                                 error={errors.username}
                             />
                             <AuthInput
@@ -90,15 +127,15 @@ function RegisterPage() {
                                 type="email"
                                 placeholder="you@example.com"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: "" })) }}
                                 error={errors.email}
                             />
                             <AuthInput
                                 label="Password"
                                 type="password"
-                                placeholder="••••••••  (min 8 chars)"
+                                placeholder="••••••••  (8–20 chars)"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => { setPassword(e.target.value); setErrors(p => ({ ...p, password: "" })) }}
                                 error={errors.password}
                             />
 
