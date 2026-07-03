@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { FaEnvelope, FaKey, FaCheckCircle, FaPaperPlane, FaLock } from "react-icons/fa"
+import { FaEnvelope, FaKey, FaCheckCircle, FaPaperPlane, FaLock, FaExclamationCircle } from "react-icons/fa"
 import apiCall from "../../services/apiCall"
 import TabLoader from "../../components/ui/TabLoader"
 import { useUserProfileContext } from "../../context/userProfileContext"
+
+const RESEND_COOLDOWN = 60 // seconds
 
 export default function ResetPasswordPage() {
 
@@ -19,6 +21,16 @@ export default function ResetPasswordPage() {
     const [sendLoading, setSendLoading] = useState(false)
     const [resetLoading, setResetLoading] = useState(false)
     const [successMsg, setSuccessMsg] = useState("")
+    const [globalError, setGlobalError] = useState("")
+
+    // Countdown timer state
+    const [cooldown, setCooldown] = useState(0)
+    const timerRef = useRef(null)
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => clearInterval(timerRef.current)
+    }, [])
 
     if (loading) {
         return (
@@ -30,15 +42,32 @@ export default function ResetPasswordPage() {
 
     const isLoggedIn = !!userProfile?.username
 
+    const startCooldown = () => {
+        setCooldown(RESEND_COOLDOWN)
+        timerRef.current = setInterval(() => {
+            setCooldown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timerRef.current)
+                    return 0
+                }
+                return prev - 1
+            })
+        }, 1000)
+    }
+
     const handleSendOtp = async () => {
         if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             setErrors({ email: "Please enter a valid email address." })
             return
         }
         setErrors({})
+        setGlobalError("")
         const result = await apiCall.sendPasswordResetOtp(email, setSendLoading)
         if (typeof result === "string") {
             setOtpSent(true)
+            startCooldown()
+        } else if (result?.message) {
+            setGlobalError(result.message)
         }
     }
 
@@ -56,6 +85,7 @@ export default function ResetPasswordPage() {
         const errs = validate()
         if (Object.keys(errs).length > 0) { setErrors(errs); return }
         setErrors({})
+        setGlobalError("")
 
         const result = await apiCall.resetPassword(
             { email, otp, newPassword },
@@ -63,11 +93,20 @@ export default function ResetPasswordPage() {
         )
         if (typeof result === "string") {
             setSuccessMsg("Password reset successfully! Redirecting…")
-            // If logged in, clear session; then go to login
             if (isLoggedIn) setUserProfile({})
             setTimeout(() => navigate("/login"), 2000)
+        } else if (result?.message) {
+            setGlobalError(result.message)
         }
     }
+
+    const sendBtnLabel = sendLoading
+        ? "Sending…"
+        : !otpSent
+            ? "Send OTP"
+            : cooldown > 0
+                ? `Resend OTP (${cooldown}s)`
+                : "Resend OTP"
 
     return (
         <main className="flex-1 h-full bg-surface pb-12 overflow-y-auto">
@@ -102,6 +141,14 @@ export default function ResetPasswordPage() {
                         </div>
                     )}
 
+                    {/* Global error */}
+                    {globalError && (
+                        <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium animate-[fadeIn_200ms_ease-out]">
+                            <FaExclamationCircle className="text-red-500 shrink-0" />
+                            {globalError}
+                        </div>
+                    )}
+
                     <div className="card p-6 flex flex-col gap-5">
 
                         {/* Email field */}
@@ -119,18 +166,18 @@ export default function ResetPasswordPage() {
                                 placeholder="your@email.com"
                                 className={`input-field ${isLoggedIn ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""} ${errors.email ? "input-error" : ""}`}
                             />
-                            {errors.email && <p className="text-red-500 text-xs font-medium">{errors.email}</p>}
+                            {errors.email && <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium"><FaExclamationCircle className="shrink-0" />{errors.email}</p>}
                         </div>
 
-                        {/* Send OTP */}
+                        {/* Send / Resend OTP */}
                         <button
                             type="button"
                             onClick={handleSendOtp}
-                            disabled={sendLoading || otpSent}
+                            disabled={sendLoading || (otpSent && cooldown > 0)}
                             className="self-start flex items-center gap-2 btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                             <FaPaperPlane className="text-xs" />
-                            {sendLoading ? "Sending…" : otpSent ? "OTP Sent ✓" : "Send OTP"}
+                            {sendBtnLabel}
                         </button>
 
                         {/* OTP + new password fields — shown after sending */}
@@ -152,7 +199,7 @@ export default function ResetPasswordPage() {
                                         maxLength={10}
                                         className={`input-field tracking-widest font-mono ${errors.otp ? "input-error" : ""}`}
                                     />
-                                    {errors.otp && <p className="text-red-500 text-xs font-medium">{errors.otp}</p>}
+                                    {errors.otp && <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium"><FaExclamationCircle className="shrink-0" />{errors.otp}</p>}
                                 </div>
 
                                 {/* New password */}
@@ -169,7 +216,7 @@ export default function ResetPasswordPage() {
                                         placeholder="At least 8 characters"
                                         className={`input-field ${errors.newPassword ? "input-error" : ""}`}
                                     />
-                                    {errors.newPassword && <p className="text-red-500 text-xs font-medium">{errors.newPassword}</p>}
+                                    {errors.newPassword && <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium"><FaExclamationCircle className="shrink-0" />{errors.newPassword}</p>}
                                 </div>
 
                                 {/* Confirm password */}
@@ -186,7 +233,7 @@ export default function ResetPasswordPage() {
                                         placeholder="Re-enter your new password"
                                         className={`input-field ${errors.confirmPassword ? "input-error" : ""}`}
                                     />
-                                    {errors.confirmPassword && <p className="text-red-500 text-xs font-medium">{errors.confirmPassword}</p>}
+                                    {errors.confirmPassword && <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium"><FaExclamationCircle className="shrink-0" />{errors.confirmPassword}</p>}
                                 </div>
 
                                 <div className="flex gap-3">

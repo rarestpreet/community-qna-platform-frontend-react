@@ -196,7 +196,7 @@ const postAnswer = async (postId, body, setLoading) => {
             { body }
         )
 
-        response?.data
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
@@ -215,7 +215,7 @@ const updateAnswer = async (postId, body, setLoading) => {
             { body }
         )
 
-        response?.data
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
@@ -233,7 +233,7 @@ const deleteAnswer = async (postId, setLoading) => {
             `/post/answer/${postId}`
         )
 
-        response?.data
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
@@ -252,7 +252,7 @@ const updateQuestion = async (postId, questionDetails, setLoading) => {
             questionDetails
         )
 
-        response?.data
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
@@ -268,7 +268,7 @@ const deleteQuestion = async (postId) => {
             `/post/question/${postId}`
         )
 
-        response?.data
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 

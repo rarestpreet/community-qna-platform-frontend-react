@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { FaEnvelope, FaKey, FaCheckCircle, FaPaperPlane } from "react-icons/fa"
+import { FaEnvelope, FaKey, FaCheckCircle, FaPaperPlane, FaExclamationCircle } from "react-icons/fa"
 import apiCall from "../../services/apiCall"
 import TabLoader from "../../components/ui/TabLoader"
 import { useUserProfileContext } from "../../context/userProfileContext"
+
+const RESEND_COOLDOWN = 60 // seconds
 
 export default function VerifyEmailPage() {
     const navigate = useNavigate()
@@ -12,13 +14,63 @@ export default function VerifyEmailPage() {
     const [otpSent, setOtpSent] = useState(false)
     const [otp, setOtp] = useState("")
     const [otpError, setOtpError] = useState("")
+    const [sendError, setSendError] = useState("")
     const [sendLoading, setSendLoading] = useState(false)
     const [verifyLoading, setVerifyLoading] = useState(false)
     const [successMsg, setSuccessMsg] = useState("")
 
+    // Countdown timer state
+    const [cooldown, setCooldown] = useState(0)
+    const timerRef = useRef(null)
+
     useEffect(() => {
         if (!loading && !userProfile?.username) navigate("/login")
     }, [loading, userProfile, navigate])
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => clearInterval(timerRef.current)
+    }, [])
+
+    const startCooldown = () => {
+        setCooldown(RESEND_COOLDOWN)
+        timerRef.current = setInterval(() => {
+            setCooldown((prev) => {
+                if (prev <= 1) {
+                    clearInterval(timerRef.current)
+                    return 0
+                }
+                return prev - 1
+            })
+        }, 1000)
+    }
+
+    const handleSendOtp = async () => {
+        setSendError("")
+        const result = await apiCall.sendVerificationOtp(setSendLoading)
+        if (typeof result === "string") {
+            setOtpSent(true)
+            setOtpError("")
+            startCooldown()
+        } else if (result?.message) {
+            setSendError(result.message)
+        }
+    }
+
+    const handleVerify = async (e) => {
+        e.preventDefault()
+        if (!otp.trim()) { setOtpError("Please enter the OTP."); return }
+        setOtpError("")
+
+        const result = await apiCall.verifyAccount(otp, setVerifyLoading)
+        if (typeof result === "string") {
+            await apiCall.getUserDetails(setLoading, setUserProfile)
+            setSuccessMsg("Your email has been verified successfully!")
+            setTimeout(() => navigate(`/profile/${userProfile.username}`), 2000)
+        } else if (result?.message) {
+            setOtpError(result.message)
+        }
+    }
 
     if (loading) {
         return (
@@ -30,27 +82,14 @@ export default function VerifyEmailPage() {
 
     if (!userProfile?.username) return null
 
-    const handleSendOtp = async () => {
-        const result = await apiCall.sendVerificationOtp(setSendLoading)
-        if (typeof result === "string") {
-            setOtpSent(true)
-            setOtpError("")
-        }
-    }
-
-    const handleVerify = async (e) => {
-        e.preventDefault()
-        if (!otp.trim()) { setOtpError("Please enter the OTP."); return }
-        setOtpError("")
-
-        const result = await apiCall.verifyAccount(otp, setVerifyLoading)
-        if (typeof result === "string") {
-            // Refresh context so accountVerified flag updates
-            await apiCall.getUserDetails(setLoading, setUserProfile)
-            setSuccessMsg("Your email has been verified successfully!")
-            setTimeout(() => navigate(`/profile/${userProfile.username}`), 2000)
-        }
-    }
+    const canResend = otpSent && cooldown === 0 && !sendLoading
+    const sendBtnLabel = sendLoading
+        ? "Sending…"
+        : !otpSent
+            ? "Send OTP"
+            : cooldown > 0
+                ? `Resend OTP (${cooldown}s)`
+                : "Resend OTP"
 
     return (
         <main className="flex-1 h-full bg-surface pb-12 overflow-y-auto">
@@ -102,16 +141,24 @@ export default function VerifyEmailPage() {
                             <p className="text-xs text-gray-400">This is the email that will receive the verification OTP.</p>
                         </div>
 
-                        {/* Send OTP */}
-                        <button
-                            type="button"
-                            onClick={handleSendOtp}
-                            disabled={sendLoading || otpSent}
-                            className="self-start flex items-center gap-2 btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
-                        >
-                            <FaPaperPlane className="text-xs" />
-                            {sendLoading ? "Sending…" : otpSent ? "OTP Sent ✓" : "Send OTP"}
-                        </button>
+                        {/* Send / Resend OTP */}
+                        <div className="flex flex-col gap-1.5">
+                            <button
+                                type="button"
+                                onClick={handleSendOtp}
+                                disabled={sendLoading || (otpSent && cooldown > 0)}
+                                className="self-start flex items-center gap-2 btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                <FaPaperPlane className="text-xs" />
+                                {sendBtnLabel}
+                            </button>
+                            {sendError && (
+                                <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium">
+                                    <FaExclamationCircle className="shrink-0" />
+                                    {sendError}
+                                </p>
+                            )}
+                        </div>
 
                         {/* OTP input — shown after sending */}
                         {otpSent && (
@@ -130,7 +177,12 @@ export default function VerifyEmailPage() {
                                         maxLength={10}
                                         className={`input-field tracking-widest font-mono ${otpError ? "input-error" : ""}`}
                                     />
-                                    {otpError && <p className="text-red-500 text-xs font-medium">{otpError}</p>}
+                                    {otpError && (
+                                        <p className="flex items-center gap-1.5 text-red-500 text-xs font-medium">
+                                            <FaExclamationCircle className="shrink-0" />
+                                            {otpError}
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-3">
