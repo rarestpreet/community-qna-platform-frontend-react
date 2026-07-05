@@ -7,19 +7,46 @@ import PageLoader from "../../components/ui/PageLoader"
 import EmptyState from "../../components/ui/EmptyState"
 import HomeSidebar from "./HomeSidebar"
 import { FaInbox } from "react-icons/fa"
+import useInfiniteScroll from "../../hooks/useInfiniteScroll"
 
 function HomePage() {
   const navigate = useNavigate()
   const { userProfile } = useUserContext()
   const [feedData, setFeedData] = useState([])
-  const [loading, setLoading] = useState()
+  const [loading, setLoading] = useState(false)
+  
+  // Pagination state
+  const [limit] = useState(5)
+  const [offset, setOffset] = useState(0)
+  const [hasMore, setHasMore] = useState(true)
+  const [isFetchingMore, setIsFetchingMore] = useState(false)
 
   useEffect(() => {
-    const populateFeed = async () => {
-      const response = await apiCall.getFeed(setLoading, setFeedData)
+    const fetchInitialFeed = async () => {
+      setLoading(true)
+      const response = await apiCall.getFeed(limit, 0)
+      if (response && response.data) {
+        setFeedData(response.data)
+        setHasMore(response.pageData.hasMore)
+        setOffset(limit) // next offset
+      }
+      setLoading(false)
     }
-    populateFeed()
-  }, [])
+    fetchInitialFeed()
+  }, [limit])
+
+  const loadMore = async () => {
+    setIsFetchingMore(true)
+    const response = await apiCall.getFeed(limit, offset)
+    if (response && response.data) {
+      setFeedData(prev => [...prev, ...response.data])
+      setHasMore(response.pageData.hasMore)
+      setOffset(prev => prev + limit)
+    }
+    setIsFetchingMore(false)
+  }
+
+  useInfiniteScroll(loadMore, hasMore, isFetchingMore)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -63,9 +90,16 @@ function HomePage() {
               }
             />
           ) : (
-            feedData.map((currPost) => (
-              <FeedPost key={currPost.postId} post={currPost} />
-            ))
+            <>
+              {feedData.map(post => (
+                <FeedPost key={post.postId} post={post} />
+              ))}
+              {isFetchingMore && (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+                </div>
+              )}
+            </>
           )}
         </div>
 

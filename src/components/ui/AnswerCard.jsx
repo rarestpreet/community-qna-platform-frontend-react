@@ -97,7 +97,9 @@ function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateCom
 
                 {/* Comments */}
                 <CommentsList
+                    postId={answer.postId}
                     comments={answer.comments || []}
+                    hasMoreComments={answer.hasMoreComments}
                     onAddComment={onAddComment}
                     onDeleteComment={onDeleteComment}
                     onUpdateComment={onUpdateComment}

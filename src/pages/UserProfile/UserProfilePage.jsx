@@ -6,6 +6,7 @@ import apiCall from "../../services/apiCall"
 import ProfileHeader from "./ProfileHeader"
 import ProfileTabContent from "./ProfileTabContent"
 import { useUserContext } from "../../context/userContext"
+import useInfiniteScroll from "../../hooks/useInfiniteScroll"
 
 /**
  * AnswerCard — individual answer with vote box, body, and comments.
@@ -21,40 +22,84 @@ export default function UserProfilePage() {
     const [loading, setLoading] = useState(false)
     const [userProfile, setUserProfile] = useState({})
     const [activeTab, setActiveTab] = useState("questions")
-    const [tabLoading, setTabLoading] = useState()
+    const [tabLoading, setTabLoading] = useState(false)
+    const [isFetchingMore, setIsFetchingMore] = useState(false)
 
     const [userQuestions, setUserQuestions] = useState([])
     const [userAnswers, setUserAnswers] = useState([])
     const [userComments, setUserComments] = useState([])
+    
+    const [limit] = useState(5)
+    const [offsets, setOffsets] = useState({ questions: 0, answers: 0, comments: 0 })
+    const [hasMore, setHasMore] = useState({ questions: true, answers: true, comments: true })
 
     useEffect(() => {
         const fetchUserProfile = async () => {
             await apiCall.getUserProfile(username, setLoading, setUserProfile)
         }
         fetchUserProfile()
-        fetchUserQuestions()
     }, [username])
 
-    const fetchUserQuestions = async () => {
-        const data = await apiCall.getUserQuestion(username, setTabLoading, setUserQuestions)
+    useEffect(() => {
+        if (activeTab === "questions" && userQuestions.length === 0) fetchUserQuestions(true)
+        else if (activeTab === "answers" && userAnswers.length === 0) fetchUserAnswers(true)
+        else if (activeTab === "comments" && userComments.length === 0) fetchUserComments(true)
+    }, [activeTab, username])
+
+    const fetchUserQuestions = async (isInitial = false) => {
+        const currentOffset = isInitial ? 0 : offsets.questions
+        isInitial ? setTabLoading(true) : setIsFetchingMore(true)
+        
+        const response = await apiCall.getUserQuestion(username, limit, currentOffset)
+        if (response && response.data) {
+            setUserQuestions(prev => isInitial ? response.data : [...prev, ...response.data])
+            setOffsets(prev => ({ ...prev, questions: currentOffset + limit }))
+            setHasMore(prev => ({ ...prev, questions: response.pageData.hasMore }))
+        }
+        
+        isInitial ? setTabLoading(false) : setIsFetchingMore(false)
     }
 
-    const fetchUserAnswers = async () => {
-        const data = await apiCall.getUserAnswer(username, setTabLoading, setUserAnswers)
+    const fetchUserAnswers = async (isInitial = false) => {
+        const currentOffset = isInitial ? 0 : offsets.answers
+        isInitial ? setTabLoading(true) : setIsFetchingMore(true)
+        
+        const response = await apiCall.getUserAnswer(username, limit, currentOffset)
+        if (response && response.data) {
+            setUserAnswers(prev => isInitial ? response.data : [...prev, ...response.data])
+            setOffsets(prev => ({ ...prev, answers: currentOffset + limit }))
+            setHasMore(prev => ({ ...prev, answers: response.pageData.hasMore }))
+        }
+        
+        isInitial ? setTabLoading(false) : setIsFetchingMore(false)
     }
 
-    const fetchUserComments = async () => {
-        const data = await apiCall.getUserComment(username, setTabLoading, setUserComments)
+    const fetchUserComments = async (isInitial = false) => {
+        const currentOffset = isInitial ? 0 : offsets.comments
+        isInitial ? setTabLoading(true) : setIsFetchingMore(true)
+        
+        const response = await apiCall.getUserComment(username, limit, currentOffset)
+        if (response && response.data) {
+            setUserComments(prev => isInitial ? response.data : [...prev, ...response.data])
+            setOffsets(prev => ({ ...prev, comments: currentOffset + limit }))
+            setHasMore(prev => ({ ...prev, comments: response.pageData.hasMore }))
+        }
+        
+        isInitial ? setTabLoading(false) : setIsFetchingMore(false)
     }
 
     const handleTabChange = (tab) => {
         if (activeTab === tab) return
         setActiveTab(tab)
-
-        if (tab === "questions") fetchUserQuestions()
-        else if (tab === "answers") fetchUserAnswers()
-        else fetchUserComments()
     }
+
+    const loadMore = () => {
+        if (activeTab === "questions") fetchUserQuestions(false)
+        else if (activeTab === "answers") fetchUserAnswers(false)
+        else fetchUserComments(false)
+    }
+
+    useInfiniteScroll(loadMore, hasMore[activeTab], isFetchingMore)
 
     const tabConfig = [
         { key: "questions", label: "Questions", icon: FaQuestionCircle },
@@ -107,6 +152,11 @@ export default function UserProfilePage() {
                                 comments={userComments}
                                 loading={tabLoading}
                             />
+                            {isFetchingMore && (
+                                <div className="flex justify-center py-4">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

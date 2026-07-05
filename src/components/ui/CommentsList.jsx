@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { FaChevronDown, FaChevronUp, FaExclamationCircle } from "react-icons/fa"
 import CommentItem from "./CommentItem"
 
@@ -10,12 +10,55 @@ import CommentItem from "./CommentItem"
  *   - onDeleteComment: (commentId: number) => Promise<void>
  *   - isLoggedIn: boolean
  */
-function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateComment, isLoggedIn = false, commentLoader }) {
+function CommentsList({ postId, comments: propComments = [], hasMoreComments: propHasMore = false, onAddComment, onDeleteComment, onUpdateComment, isLoggedIn = false, commentLoader }) {
     const [isOpen, setIsOpen] = useState(false)
     const [newComment, setNewComment] = useState("")
     const [editingCommentId, setEditingCommentId] = useState(null)
     const [commentError, setCommentError] = useState("")
     const inputRef = useRef(null)
+
+    const [localComments, setLocalComments] = useState([])
+    const [localHasMore, setLocalHasMore] = useState(false)
+    const [offset, setOffset] = useState(0)
+    const [isFetchingMore, setIsFetchingMore] = useState(false)
+    const loaderRef = useRef(null)
+
+    useEffect(() => {
+        setLocalComments(propComments)
+        setLocalHasMore(propHasMore)
+        setOffset(propComments.length)
+    }, [propComments, propHasMore])
+
+    const loadMore = useCallback(async () => {
+        if (!localHasMore || isFetchingMore || !isOpen) return
+        setIsFetchingMore(true)
+        // Ensure apiCall is imported or handle it if it isn't. Wait, CommentsList doesn't import apiCall.
+        // Let's import it at the top or pass it. We need to import it.
+        const apiCallModule = await import('../../services/apiCall')
+        const response = await apiCallModule.default.getPostComments(postId, 5, offset)
+        if (response && response.data) {
+            setLocalComments(prev => {
+                const existingIds = new Set(prev.map(c => c.commentId))
+                const newComments = response.data.filter(c => !existingIds.has(c.commentId))
+                return [...prev, ...newComments]
+            })
+            setLocalHasMore(response.pageData.hasMore)
+            setOffset(prev => prev + 5)
+        }
+        setIsFetchingMore(false)
+    }, [localHasMore, isFetchingMore, isOpen, postId, offset])
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting) {
+                loadMore()
+            }
+        }, { threshold: 0.1 })
+        
+        if (loaderRef.current) observer.observe(loaderRef.current)
+        
+        return () => observer.disconnect()
+    }, [loadMore])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
@@ -63,13 +106,14 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateCo
                 className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
             >
                 {isOpen ? <FaChevronUp /> : <FaChevronDown />}
-                {comments.length} {comments.length === 1 ? "comment" : "comments"}
+                {propComments.length} {propComments.length === 1 ? "comment" : "comments"}
             </button>
 
             {/* Comments list */}
             {isOpen && (
                 <div className="mt-2 flex flex-col divide-y divide-gray-50">
-                    {comments.map(comment => (
+                    <span className="font-semibold text-gray-700">Comments ({localComments.length}{localHasMore ? "+" : ""})</span>
+                    {localComments.map(comment => (
                         <CommentItem
                             key={comment.commentId}
                             comment={comment}
@@ -83,6 +127,15 @@ function CommentsList({ comments = [], onAddComment, onDeleteComment, onUpdateCo
                             isLoggedIn={isLoggedIn}
                         />
                     ))}
+                    {localHasMore && (
+                        <div ref={loaderRef} className="flex justify-center py-2">
+                            {isFetchingMore ? (
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-600"></div>
+                            ) : (
+                                <div className="h-5"></div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Add comment form */}
                     {isLoggedIn && (
