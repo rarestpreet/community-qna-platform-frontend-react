@@ -8,6 +8,7 @@ import AnswersList from "./AnswersList"
 import NavBar from "../../components/NavBar"
 import helperFunctions from "../../services/helperFunctions"
 import AnswerModal from "../../components/ui/AnswerModal"
+import useInfiniteScroll from "../../hooks/useInfiniteScroll"
 
 export default function QuestionDetailPage() {
     const { encryptedPostId } = useParams()
@@ -17,15 +18,46 @@ export default function QuestionDetailPage() {
     const [loading, setLoading] = useState(false)
     const [commentLoader, setCommentLoader] = useState(false)
 
+    const [limit] = useState(5)
+    const [offset, setOffset] = useState(0)
+    const [hasMoreAnswers, setHasMoreAnswers] = useState(true)
+    const [isFetchingMoreAnswers, setIsFetchingMoreAnswers] = useState(false)
+    const [answers, setAnswers] = useState([])
+
     const postId = helperFunctions.decryptNavId(encryptedPostId)
 
     useEffect(() => {
-        fetchQuestion()
+        fetchQuestion(true)
     }, [postId])
 
-    const fetchQuestion = async () => {
-        const data = await apiCall.getQuestionDetails(postId, setLoading, setQuestion)
+    const fetchQuestion = async (isInitial = false) => {
+        const fetchLimit = isInitial ? limit : (offset === 0 ? limit : offset)
+        const data = await apiCall.getQuestionDetails(postId, fetchLimit, 0, setLoading)
+        if (data) {
+            setQuestion(data)
+            setAnswers(data.answers || [])
+            setHasMoreAnswers(data.hasMoreAnswers)
+            if (isInitial) setOffset(limit)
+        }
     }
+
+    const loadMoreAnswers = async () => {
+        if (!hasMoreAnswers || isFetchingMoreAnswers) return
+        setIsFetchingMoreAnswers(true)
+        const response = await apiCall.getPostAnswers(postId, limit, offset)
+        if (response && response.data) {
+            setAnswers(prev => {
+                const existingIds = new Set(prev.map(a => a.postId))
+                const newAnswers = response.data.filter(a => !existingIds.has(a.postId))
+                return [...prev, ...newAnswers]
+            })
+            setHasMoreAnswers(response.pageData.hasMore)
+            setOffset(prev => prev + limit)
+        }
+        setIsFetchingMoreAnswers(false)
+    }
+
+    useInfiniteScroll(loadMoreAnswers, hasMoreAnswers, isFetchingMoreAnswers)
 
     // ── Vote handler ──
     const handleVote = async (targetPostId, voteType) => {
@@ -116,9 +148,9 @@ export default function QuestionDetailPage() {
                 )}
 
                 {/* Answers */}
-                {question.answers?.length > 0 && (
+                {answers?.length > 0 && (
                     <AnswersList
-                        answers={question.answers}
+                        answers={answers}
                         onVote={handleVote}
                         onAddComment={handleAddComment}
                         onDeleteComment={handleDeleteComment}
@@ -133,6 +165,11 @@ export default function QuestionDetailPage() {
                             await fetchQuestion()
                         }}
                     />
+                )}
+                {isFetchingMoreAnswers && (
+                    <div className="flex justify-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+                    </div>
                 )}
             </div>
 

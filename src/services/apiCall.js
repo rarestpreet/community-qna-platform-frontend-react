@@ -2,19 +2,19 @@ import api from "../util/axiosConfig"
 import logging from "../util/logHandler"
 
 // ── Feed ──────────────────────────────────────────────────────
-const getFeed = async (setLoading, setFeedData) => {
-    setLoading(true)
+const getFeed = async (limit, offset, setLoading) => {
+    setLoading && setLoading(true)
 
     try {
-        const response = await api.get("/")
+        const response = await api.get(`/?limit=${limit}&offset=${offset}`)
 
-        await setFeedData(response?.data || [])
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
-        return ex?.response.data
+        return null
     } finally {
-        setLoading(false)
+        setLoading && setLoading(false)
     }
 }
 
@@ -103,68 +103,84 @@ const getUserProfile = async (username, setLoading, setUserProfile) => {
     }
 }
 
-const getUserQuestion = async (username, setLoading, setUserQuestions) => {
-    setLoading(true)
+const getUserQuestion = async (username, limit, offset, setLoading) => {
+    setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/profile/${username}/questions`)
+        const response = await api.get(`/profile/${username}/questions?limit=${limit}&offset=${offset}`)
 
-        setUserQuestions(response.data || [])
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
-        return ex?.response.data
+        return null
     } finally {
-        setLoading(false)
+        setLoading && setLoading(false)
     }
 }
 
-const getUserAnswer = async (username, setLoading, setUserAnswers) => {
-    setLoading(true)
+const getUserAnswer = async (username, limit, offset, setLoading) => {
+    setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/profile/${username}/answers`)
+        const response = await api.get(`/profile/${username}/answers?limit=${limit}&offset=${offset}`)
 
-        setUserAnswers(response?.data || [])
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
-        return ex?.response.data
+        return null
     } finally {
-        setLoading(false)
+        setLoading && setLoading(false)
     }
 }
 
-const getUserComment = async (username, setLoading, setUserComments) => {
-    setLoading(true)
+const getUserComment = async (username, limit, offset, setLoading) => {
+    setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/profile/${username}/comments`)
+        const response = await api.get(`/profile/${username}/comments?limit=${limit}&offset=${offset}`)
 
-        setUserComments(response.data || [])
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
-        return ex?.response.data
+        return null
     } finally {
-        setLoading(false)
+        setLoading && setLoading(false)
     }
 }
 
 // ── Posts ──────────────────────────────────────────────────────
-const getQuestionDetails = async (postId, setLoading, setQuestion) => {
-    setLoading(true)
+const getQuestionDetails = async (postId, limit, offset, setLoading) => {
+    setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/post/${postId}`)
+        const response = await api.get(`/post/${postId}?limit=${limit}&offset=${offset}`)
 
-        setQuestion(response.data || {})
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
-        return ex?.response.data
+        return null
     } finally {
-        setLoading(false)
+        setLoading && setLoading(false)
+    }
+}
+
+const getPostAnswers = async (postId, limit, offset, setLoading) => {
+    setLoading && setLoading(true)
+
+    try {
+        const response = await api.get(`/post/${postId}/answers?limit=${limit}&offset=${offset}`)
+
+        return response?.data
+    } catch (ex) {
+        logging.errorHandler(ex?.response?.data)
+
+        return null
+    } finally {
+        setLoading && setLoading(false)
     }
 }
 
@@ -277,6 +293,21 @@ const deleteQuestion = async (postId) => {
 }
 
 // ── Comments ──────────────────────────────────────────────────
+const getPostComments = async (postId, limit, offset, setLoading) => {
+    setLoading && setLoading(true)
+
+    try {
+        const response = await api.get(`/comment?postId=${postId}&limit=${limit}&offset=${offset}`)
+
+        return response?.data
+    } catch (ex) {
+        logging.errorHandler(ex?.response?.data)
+
+        return null
+    } finally {
+        setLoading && setLoading(false)
+    }
+}
 const postComment = async (commentDetails, setCommentLoader) => {
     setCommentLoader(true)
 
@@ -551,6 +582,8 @@ const apiCall = {
     getUserQuestion,
     terminateSession,
     getQuestionDetails,
+    getPostAnswers,
+    getPostComments,
     postAnswer,
     getAllTags,
     createNewTag,

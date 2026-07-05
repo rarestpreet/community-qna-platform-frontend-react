@@ -96,9 +96,11 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdat
                     </div>
                 </div>
 
-                {/* Comments */}
+                {/* Comments toggle & list */}
                 <CommentsList
-                    comments={question.comments || []}
+                    postId={question.postId}
+                    comments={question.comments}
+                    hasMoreComments={question.hasMoreComments}
                     onAddComment={onAddComment}
                     onDeleteComment={onDeleteComment}
                     onUpdateComment={onUpdateComment}
