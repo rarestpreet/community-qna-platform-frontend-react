@@ -8,7 +8,7 @@ function SideNavBar() {
     const navigate = useNavigate()
     const { loading, userProfile, setUserProfile, setLoading } = useUserContext()
 
-    const isAdmin = userProfile?.roles?.includes("ADMIN") || false
+    const isAdmin = userProfile?.roles === "ADMIN" || false
     const isOperable = userProfile?.username &&
         (
             location.pathname.includes(userProfile?.username) ||

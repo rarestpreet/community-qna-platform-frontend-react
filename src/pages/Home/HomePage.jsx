@@ -8,10 +8,12 @@ import EmptyState from "../../components/ui/EmptyState"
 import HomeSidebar from "./HomeSidebar"
 import { FaInbox } from "react-icons/fa"
 import useInfiniteScroll from "../../hooks/useInfiniteScroll"
+import useRoleAction from "../../hooks/useRoleAction"
 
 function HomePage() {
   const navigate = useNavigate()
   const { userProfile } = useUserContext()
+  const { requireRole } = useRoleAction()
   const [feedData, setFeedData] = useState([])
   const [loading, setLoading] = useState(false)
   
@@ -79,13 +81,10 @@ function HomePage() {
               message="There are no posts to display right now. Check back later or ask a new question!"
               actionButton={
                 <button
-                  onClick={() => (userProfile?.username
-                    ? navigate("/ask")
-                    : navigate("/register")
-                  )}
+                  onClick={() => requireRole(["VERIFIED_USER", "ADMIN"], () => navigate("/ask"))}
                   className="btn-primary mt-4"
                 >
-                  {userProfile?.username ? "Ask a Question" : "Sign Up"}
+                  Ask a Question
                 </button>
               }
             />
@@ -110,17 +109,15 @@ function HomePage() {
       </div>
 
       {/* Mobile FAB for ask question */}
-      {userProfile?.username && (
-        <button
-          onClick={() => navigate("/ask")}
-          className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-brand-500 hover:bg-brand-600
-                        text-white text-2xl font-bold rounded-full shadow-lg
-                        flex items-center justify-center transition-all active:scale-95 cursor-pointer z-40"
-          aria-label="Ask a question"
-        >
-          +
-        </button>
-      )}
+      <button
+        onClick={() => requireRole(["VERIFIED_USER", "ADMIN"], () => navigate("/ask"))}
+        className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-brand-500 hover:bg-brand-600
+                      text-white text-2xl font-bold rounded-full shadow-lg
+                      flex items-center justify-center transition-all active:scale-95 cursor-pointer z-40"
+        aria-label="Ask a question"
+      >
+        +
+      </button>
     </div>
   )
 }

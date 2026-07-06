@@ -72,7 +72,7 @@ function NavBar() {
                             </div>
 
                             {/* Admin Dashboard (admin only) */}
-                            {userProfile.roles.includes("ADMIN") && (
+                            {userProfile.roles === "ADMIN" && (
                                 <div
                                     className="flex items-center gap-2 cursor-pointer py-2 px-3 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                                     onClick={() => {
@@ -86,7 +86,7 @@ function NavBar() {
                             )}
 
                             {/* Health Check (admin only) */}
-                            {userProfile.roles.includes("ADMIN") && (
+                            {userProfile.roles === "ADMIN" && (
                                 <div
                                     className="flex items-center gap-2 cursor-pointer py-2 px-3 text-sm font-medium text-brand-600 hover:bg-brand-50 rounded-lg transition-colors"
                                     onClick={() => {

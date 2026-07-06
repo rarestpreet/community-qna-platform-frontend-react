@@ -4,10 +4,12 @@ import { FaPlus, FaTags, FaChartBar } from "react-icons/fa"
 import { useUserContext } from "../../context/userContext"
 import apiCall from "../../services/apiCall"
 import PageLoader from "../../components/ui/PageLoader"
+import useRoleAction from "../../hooks/useRoleAction"
 
 function HomeSidebar() {
     const navigate = useNavigate()
     const { userProfile } = useUserContext()
+    const { requireRole } = useRoleAction()
     const [tags, setTags] = useState([])
     const [loading, setLoading] = useState(false)
 
@@ -27,16 +29,13 @@ function HomeSidebar() {
                     Share your question with the community and get expert answers.
                 </p>
                 <button
-                    onClick={() => userProfile?.username
-                        ? navigate("/ask")
-                        : navigate("/register")
-                    }
+                    onClick={() => requireRole(["VERIFIED_USER", "ADMIN"], () => navigate("/ask"))}
                     className="w-full bg-white text-brand-600 font-bold text-sm py-2.5 rounded-xl
                         hover:bg-gray-50 transition-colors flex items-center justify-center gap-2
                         shadow-sm active:scale-[0.97] cursor-pointer"
                 >
                     <FaPlus className="text-xs" />
-                    {userProfile?.username ? "Ask a Question" : "Sign Up to Ask"}
+                    Ask a Question
                 </button>
             </div>
 

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { FaEllipsisV, FaFlag, FaTrash, FaEdit, FaShareAlt } from 'react-icons/fa';
 
-export default function ActionMenu({ isLoggedIn, operable, canReport, onEdit, onDelete, onReport, onShare }) {
+export default function ActionMenu({ operable, canReport, onEdit, onDelete, onReport, onShare }) {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef(null);
 
@@ -16,8 +16,8 @@ export default function ActionMenu({ isLoggedIn, operable, canReport, onEdit, on
     }, []);
 
     const options = [
-        { label: "Edit", icon: FaEdit, onClick: onEdit || (() => {}), show: isLoggedIn && operable },
-        { label: "Delete", icon: FaTrash, onClick: onDelete || (() => {}), danger: true, show: isLoggedIn && operable },
+        { label: "Edit", icon: FaEdit, onClick: onEdit || (() => {}), show: operable },
+        { label: "Delete", icon: FaTrash, onClick: onDelete || (() => {}), danger: true, show: operable },
         { label: "Report", icon: FaFlag, onClick: onReport || (() => {}), danger: true, show: canReport },
         { label: "Share", icon: FaShareAlt, onClick: onShare || (() => {}), show: true },
     ];

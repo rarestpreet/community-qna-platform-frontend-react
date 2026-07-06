@@ -29,7 +29,7 @@ import apiCall from "../../services/apiCall"
  *   - onDeleteComment: (commentId) => void
  *   - isLoggedIn: boolean
  */
-function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdateComment, isLoggedIn, isAdmin, commentLoader, onOperationSuccess }) {
+function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdateComment, isAdmin, commentLoader, onOperationSuccess }) {
     const navigate = useNavigate()
 
     const handleEdit = async () => {
@@ -50,7 +50,7 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdat
                 hasVoted={question.voted}
                 voteType={question.voteType}
                 onVote={onVote}
-                disabled={!isLoggedIn || isAdmin}
+                disabled={isAdmin}
                 operable={question.operable && !isAdmin}
             />
 

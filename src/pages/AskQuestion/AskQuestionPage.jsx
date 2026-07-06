@@ -54,7 +54,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
     useEffect(() => {
         if (loading) return
         if (!userProfile?.username) navigate("/login")
-        if (userProfile?.roles?.includes("ADMIN")) navigate("/")
+        if (userProfile?.roles === "ADMIN") navigate("/")
     }, [userProfile, navigate, loading])
 
     // Fetch tags once

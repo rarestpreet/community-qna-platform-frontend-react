@@ -15,7 +15,7 @@ import ActionMenu from "./ActionMenu"
  *  }
  *   - onDelete: (commentId) => void
  */
-function CommentItem({ key, comment, onDelete, onEdit, isLoggedIn }) {
+function CommentItem({ key, comment, onDelete, onEdit }) {
     const navigate = useNavigate()
 
     return (
@@ -37,7 +37,6 @@ function CommentItem({ key, comment, onDelete, onEdit, isLoggedIn }) {
                     {comment.updatedAt}
                 </span>
                 <ActionMenu
-                    isLoggedIn={isLoggedIn}
                     operable={comment.operable}
                     canReport={!comment.operable}
                     onDelete={() => onDelete(comment.commentId)}

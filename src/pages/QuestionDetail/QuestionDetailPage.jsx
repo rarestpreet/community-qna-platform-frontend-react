@@ -9,10 +9,12 @@ import NavBar from "../../components/NavBar"
 import helperFunctions from "../../services/helperFunctions"
 import AnswerModal from "../../components/ui/AnswerModal"
 import useInfiniteScroll from "../../hooks/useInfiniteScroll"
+import useRoleAction from "../../hooks/useRoleAction"
 
 export default function QuestionDetailPage() {
     const { encryptedPostId } = useParams()
     const { userProfile } = useUserContext()
+    const { requireRole } = useRoleAction()
     const [question, setQuestion] = useState(null)
     const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
     const [loading, setLoading] = useState(false)
@@ -61,14 +63,19 @@ export default function QuestionDetailPage() {
 
     // ── Vote handler ──
     const handleVote = async (targetPostId, voteType) => {
-        await apiCall.submitVote({ postId: targetPostId, voteType }, setLoading)
-        await fetchQuestion()
+        requireRole(["VERIFIED_USER", "ADMIN"], async () => {
+            await apiCall.submitVote({ postId: targetPostId, voteType }, setLoading)
+            await fetchQuestion()
+        })
     }
 
     // ── Comment handlers ──
     const handleAddComment = async (targetPostId, body) => {
-        const result = await apiCall.postComment({ postId: targetPostId, body }, setCommentLoader)
-        await fetchQuestion()
+        let result = null
+        requireRole(["USER", "VERIFIED_USER", "ADMIN"], async () => {
+            result = await apiCall.postComment({ postId: targetPostId, body }, setCommentLoader)
+            await fetchQuestion()
+        })
         return result
     }
 
@@ -111,9 +118,8 @@ export default function QuestionDetailPage() {
     }
 
     const isClosed = question.postStatus === "CLOSED"
-    const isAdmin = userProfile?.roles?.includes("ADMIN") || false
-    const isLoggedIn = !!userProfile?.username
-    const canAnswer = isLoggedIn && !isClosed && !question.operable && !isAdmin
+    const isAdmin = userProfile?.roles === "ADMIN"
+    const canAnswer = !isClosed && !question.operable // "Answer This Question" button is visible to all unless closed/operable (owned by them)
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -127,7 +133,6 @@ export default function QuestionDetailPage() {
                     onAddComment={(body) => handleAddComment(question.postId, body)}
                     onDeleteComment={handleDeleteComment}
                     onUpdateComment={handleUpdateComment}
-                    isLoggedIn={isLoggedIn}
                     isAdmin={isAdmin}
                     commentLoader={commentLoader}
                     onOperationSuccess={async () => {
@@ -139,7 +144,7 @@ export default function QuestionDetailPage() {
                 {canAnswer && (
                     <div className="flex justify-center">
                         <button
-                            onClick={() => setIsAnswerModalOpen(true)}
+                            onClick={() => requireRole(["VERIFIED_USER", "ADMIN"], () => setIsAnswerModalOpen(true))}
                             className="btn-primary text-lg px-8 py-3"
                         >
                             Answer This Question
@@ -156,7 +161,6 @@ export default function QuestionDetailPage() {
                         onDeleteComment={handleDeleteComment}
                         onUpdateComment={handleUpdateComment}
                         onToggleStatus={handleToggleAnswerStatus}
-                        isLoggedIn={isLoggedIn}
                         isAdmin={isAdmin}
                         commentLoader={commentLoader}
                         operable={question.operable}

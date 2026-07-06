@@ -6,7 +6,6 @@ import { FaCheckCircle, FaExclamationTriangle } from "react-icons/fa"
  *  - userProfile: UserProfileResponseDTO {
         userId: 0,
         username: "",
-        email: "",
         reputation: 0,
         createdAt: "",
         operable: false,
@@ -28,21 +27,22 @@ function ProfileHeader({ profile, username }) {
 
             {/* Info */}
             <div className="pb-2 flex-1">
-                <h1 className="text-4xl font-black tracking-tighter text-on-surface mb-1">
-                    {profile?.username}
-                </h1>
-                <p className="text-on-surface-variant flex items-center gap-2 font-medium text-sm">
-                    {profile?.email}
-                    {profile.accountVerified ? (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-                            <FaCheckCircle /> Verified
-                        </span>
-                    ) : (
-                        <span className="text-xs bg-error/10 text-error px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
-                            <FaExclamationTriangle /> Unverified
-                        </span>
-                    )}
-                </p>
+                <div className="flex items-start gap-3 mb-1">
+                    <h1 className="text-4xl font-black tracking-tighter text-on-surface">
+                        {profile?.username}
+                    </h1>
+                    <div className="mt-2">
+                        {profile.accountVerified ? (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 shadow-sm">
+                                <FaCheckCircle /> Verified
+                            </span>
+                        ) : (
+                            <span className="text-xs bg-error/10 text-error px-2 py-0.5 rounded-full font-semibold flex items-center gap-1 shadow-sm">
+                                <FaExclamationTriangle /> Unverified
+                            </span>
+                        )}
+                    </div>
+                </div>
             </div>
 
             {/* Stats */}

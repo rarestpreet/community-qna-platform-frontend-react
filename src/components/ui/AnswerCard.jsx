@@ -26,7 +26,7 @@ import apiCall from "../../services/apiCall"
  *   - onDeleteComment: (commentId) => void
  *   - isLoggedIn: boolean
  */
-function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateComment, onToggleStatus, isLoggedIn, isAdmin, commentLoader, operable, setLoading, onOperationSuccess }) {
+function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateComment, onToggleStatus, isAdmin, commentLoader, operable, setLoading, onOperationSuccess }) {
     const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
     const navigate = useNavigate()
     const isAccepted = answer.postStatus === "ACCEPTED"
@@ -47,7 +47,7 @@ function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateCom
                     hasVoted={answer.voted}
                     voteType={answer.voteType}
                     onVote={onVote}
-                    disabled={!isLoggedIn || isAdmin}
+                    disabled={isAdmin}
                     operable={answer.operable && !isAdmin}
                 />
                 <button
@@ -103,13 +103,13 @@ function AnswerCard({ answer, onVote, onAddComment, onDeleteComment, onUpdateCom
                     onAddComment={onAddComment}
                     onDeleteComment={onDeleteComment}
                     onUpdateComment={onUpdateComment}
-                    isLoggedIn={isLoggedIn && !isAdmin}
+                    isAdmin={isAdmin}
                     commentLoader={commentLoader}
                 />
             </div>
             <div className="absolute -top-3 -right-3 z-10">
                 <ActionMenu
-                    isLoggedIn={isLoggedIn && !isAdmin}
+                    isAdmin={isAdmin}
                     operable={answer.operable && !isAdmin && answer.postStatus !== "ACCEPTED"}
                     canReport={!(answer.operable && !isAdmin)}
                     onEdit={() => setIsAnswerModalOpen(true)}

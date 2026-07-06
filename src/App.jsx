@@ -11,7 +11,7 @@ import HealthCheck from "./pages/Admin/HealthCheck"
 import EditProfilePage from "./pages/UserProfile/EditProfilePage"
 import VerifyEmailPage from "./pages/UserProfile/VerifyEmailPage"
 import ResetPasswordPage from "./pages/UserProfile/ResetPasswordPage"
-import { AdminOnly } from "./components/CustomeRoutes"
+import { AdminOnly, GuestOnly, RequireVerified } from "./components/CustomeRoutes"
 import ProfileLayout from "./ProfileLayout"
 
 function App() {
@@ -31,11 +31,15 @@ function App() {
         </Route>
       </Route>
 
-      <Route path="/ask" element={<AskQuestionPage />} />
+      <Route element={<RequireVerified />}>
+        <Route path="/ask" element={<AskQuestionPage />} />
+      </Route>
       <Route path="/profile/reset-password" element={<ResetPasswordPage />} />
       <Route path="/question/:encryptedPostId" element={<QuestionDetailPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<GuestOnly />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
     </Routes>
   )
 }
