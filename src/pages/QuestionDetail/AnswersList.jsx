@@ -20,13 +20,13 @@ function AnswersList({ answers = [], onVote, onAddComment, onDeleteComment, onUp
             <div className="flex flex-col gap-4">
                 {answers.map(answer => (
                     <AnswerCard
-                        key={answer.postId}
+                        key={answer.id}
                         answer={answer}
-                        onVote={(voteType) => onVote?.(answer.postId, voteType)}
-                        onAddComment={(body) => onAddComment?.(answer.postId, body)}
+                        onVote={(voteType) => onVote?.(answer.id, voteType)}
+                        onAddComment={(body, commentType) => onAddComment?.(answer.id, body, commentType)}
                         onDeleteComment={onDeleteComment}
                         onUpdateComment={onUpdateComment}
-                        onToggleStatus={() => onToggleStatus?.(answer.postId)}
+                        onToggleStatus={() => onToggleStatus?.(answer.id)}
                         isLoggedIn={isLoggedIn}
                         isAdmin={isAdmin}
                         commentLoader={commentLoader}

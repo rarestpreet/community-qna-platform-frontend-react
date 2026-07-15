@@ -6,29 +6,6 @@ import ActionMenu from "../../components/ui/ActionMenu"
 import { useNavigate } from "react-router-dom"
 import apiCall from "../../services/apiCall"
 
-/**
- * QuestionCard — the main question display with vote box, title, body, tags, and comments.
- * Props:
- *   - question: QuestionPostResponseDTO{
-    answers: PostAnswerResponseDTO[],
-    authorUsername: "",
-    body: "",
-    comments: CommentResponseDTO[],
-    voted: false,
-    voteType: "",
-    operable: false,
-    postId: 0,
-    postStatus: "",
-    score: 0,
-    tags: TagResponseDTO[],
-    title: "",
-    updatedAt: ""
-    }
- *   - onVote: (voteType) => void
- *   - onAddComment: (body) => void
- *   - onDeleteComment: (commentId) => void
- *   - isLoggedIn: boolean
- */
 function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdateComment, isLoggedIn, isAdmin, commentLoader, onOperationSuccess }) {
     const navigate = useNavigate()
 
@@ -37,8 +14,7 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdat
     }
 
     const handleDelete = async () => {
-        apiCall.deleteQuestion(question.postId)
-
+        apiCall.deleteQuestion(question.id)
         navigate(-1)
     }
 
@@ -61,13 +37,71 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdat
                         {question.title}
                     </h1>
                     <div className="flex items-center gap-2">
-                        <Badge status={question.postStatus} />
+                        <Badge status={question.postStatus || question.status} />
                     </div>
                 </div>
 
                 <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap mb-4">
-                    {question.body}
+                    {question.description || question.body}
                 </p>
+
+                {/* Detailed Environment Fields */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 bg-gray-50 p-4 rounded-xl text-sm border border-gray-100">
+                    <div>
+                        <span className="font-semibold text-gray-500 block text-xs uppercase tracking-wider">Error Type</span> 
+                        {question.errorType || "N/A"}
+                    </div>
+                    <div>
+                        <span className="font-semibold text-gray-500 block text-xs uppercase tracking-wider">Language</span>
+                        {question.language || "N/A"} {question.languageVersion && <span className="text-gray-400">({question.languageVersion})</span>}
+                    </div>
+                    {question.framework && (
+                        <div>
+                            <span className="font-semibold text-gray-500 block text-xs uppercase tracking-wider">Framework</span>
+                            {question.framework} {question.frameworkVersion && <span className="text-gray-400">({question.frameworkVersion})</span>}
+                        </div>
+                    )}
+                    {question.os && (
+                        <div>
+                            <span className="font-semibold text-gray-500 block text-xs uppercase tracking-wider">OS</span>
+                            {question.os} {question.osVersion && <span className="text-gray-400">({question.osVersion})</span>}
+                        </div>
+                    )}
+                </div>
+
+                {question.reproductionSteps && (
+                    <div className="mb-4">
+                        <h3 className="font-bold text-gray-800 text-sm mb-1">Reproduction Steps</h3>
+                        <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap bg-gray-50 p-3 rounded-lg border border-gray-100">{question.reproductionSteps}</p>
+                    </div>
+                )}
+
+                {question.repositoryUrl && (
+                    <div className="mb-4 bg-brand-50 border border-brand-100 p-3 rounded-lg text-sm flex gap-x-6 gap-y-2 flex-wrap">
+                        <div><span className="font-semibold text-brand-700">Repo:</span> <a href={question.repositoryUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline break-all">{question.repositoryUrl}</a></div>
+                        {question.branch && <div><span className="font-semibold text-brand-700">Branch:</span> {question.branch}</div>}
+                        {question.commitHash && <div><span className="font-semibold text-brand-700">Commit:</span> {question.commitHash}</div>}
+                        {question.filePath && <div><span className="font-semibold text-brand-700">File:</span> {question.filePath}</div>}
+                    </div>
+                )}
+
+                {question.relevantCode && (
+                    <div className="mb-4">
+                        <h3 className="font-bold text-gray-800 text-sm mb-1">Relevant Code</h3>
+                        <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg text-xs overflow-x-auto font-mono">
+                            {question.relevantCode}
+                        </pre>
+                    </div>
+                )}
+
+                {question.relevantLog && (
+                    <div className="mb-4">
+                        <h3 className="font-bold text-gray-800 text-sm mb-1">Relevant Log</h3>
+                        <pre className="bg-gray-100 text-gray-800 border border-gray-300 p-3 rounded-lg text-xs overflow-x-auto font-mono">
+                            {question.relevantLog}
+                        </pre>
+                    </div>
+                )}
 
                 {/* Tags */}
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -92,13 +126,14 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdat
                             hover:ring-2 hover:ring-brand-300 transition-all"
                         onClick={() => navigate(`/profile/${question.authorUsername}`)}
                     >
-                        {question.authorUsername[0].toUpperCase()}
+                        {question.authorUsername?.[0]?.toUpperCase() || "?"}
                     </div>
                 </div>
 
                 {/* Comments toggle & list */}
                 <CommentsList
-                    postId={question.postId}
+                    postId={question.id || question.postId}
+                    postType="ERROR_REPORT"
                     comments={question.comments}
                     hasMoreComments={question.hasMoreComments}
                     onAddComment={onAddComment}
@@ -111,7 +146,7 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdat
             <div className="absolute -top-3 -right-3 z-10">
                 <ActionMenu
                     isLoggedIn={isLoggedIn && !isAdmin}
-                    operable={question.operable && !isAdmin && question.postStatus !== "CLOSED"}
+                    operable={question.operable && !isAdmin && question.status !== "CLOSED" && question.postStatus !== "CLOSED"}
                     canReport={!(question.operable && !isAdmin)}
                     onEdit={() => handleEdit()}
                     onDelete={() => handleDelete()}

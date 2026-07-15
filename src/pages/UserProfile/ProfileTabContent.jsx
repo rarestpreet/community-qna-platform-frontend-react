@@ -50,11 +50,11 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
         return (
             <div className="flex flex-col gap-4">
                 {questions.map((q, i) => {
-                    const navigateTo = helperFunctions.encryptNavId(q.navigationPostId)
+                    const navigateTo = q.navigationId
 
                     return (
                         <div
-                            key={q.i}
+                            key={i}
                             className="flex flex-col md:flex-row gap-5 items-start bg-surface-container-lowest
                                    border border-outline-variant/20 rounded-2xl p-3
                                    hover:border-primary/40 hover:shadow-md
@@ -78,7 +78,7 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
                                     Asked: <span className="text-gray-700 font-semibold">{q.updatedAt}</span>
                                 </span>
                             </div>
-                            <Badge status={q.postStatus} />
+                            <Badge status={q.status} />
                         </div>
                     )
                 })
@@ -101,11 +101,11 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
         return (
             <div className="flex flex-col gap-4">
                 {answers.map((a, i) => {
-                    const navigateTo = helperFunctions.encryptNavId(a.navigationPostId)
+                    const navigateTo = a.navigationId
 
                     return (
                         <div
-                            key={a.i}
+                            key={i}
                             className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl p-6
                                    hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer"
                             onClick={() => navigate(`/question/${navigateTo}`)}
@@ -114,13 +114,13 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
                             <div className="flex items-center justify-between mb-3">
                                 <div className="flex gap-3 text-sm font-semibold text-on-surface-variant">
                                     <FaCommentDots className="text-primary mt-0.5" />
-                                    Answered on: <span className="text-on-surface font-bold">{a.parentPostTitle}</span>
+                                    Answered on: <span className="text-on-surface font-bold">{a.parentReportTitle}</span>
                                 </div>
-                                <Badge status={a.postStatus} />
+                                <Badge status={a.status} />
                             </div>
 
                             {/* Body */}
-                            <p className="text-on-surface text-sm line-clamp-2 pl-7 mb-3">{a.body}</p>
+                            <p className="text-on-surface text-sm line-clamp-2 pl-7 mb-3">{a.explanation}</p>
 
                             {/* Footer */}
                             <div className="flex items-center justify-between gap-3 pl-7 text-xs text-on-surface-variant font-medium">
@@ -154,11 +154,11 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
         return (
             <div className="flex flex-col gap-4">
                 {comments.map((c, i) => {
-                    const navigateTo = helperFunctions.encryptNavId(c.navigationPostId)
+                    const navigateTo = c.parentId
 
                     return (
                         <div
-                            key={c.i}
+                            key={i}
                             className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl p-6
                                    hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer"
                             onClick={() => navigate(`/question/${navigateTo}`)}
@@ -167,7 +167,7 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
                             <div className="flex items-center gap-2 mb-3">
                                 <FaQuoteLeft className="text-secondary text-sm" />
                                 <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Commented on:</span>
-                                <span className="text-sm text-on-surface line-clamp-1 font-bold">{c.postContent.substring(0, 100)}...</span>
+                                <span className="text-sm text-on-surface line-clamp-1 font-bold">{c.parentType}</span>
                             </div>
 
                             {/* Body */}

@@ -107,7 +107,7 @@ const getUserQuestion = async (username, limit, offset, setLoading) => {
     setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/profile/${username}/questions?limit=${limit}&offset=${offset}`)
+        const response = await api.get(`/profile/${username}/error-reports?limit=${limit}&offset=${offset}`)
 
         return response?.data
     } catch (ex) {
@@ -123,7 +123,7 @@ const getUserAnswer = async (username, limit, offset, setLoading) => {
     setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/profile/${username}/answers?limit=${limit}&offset=${offset}`)
+        const response = await api.get(`/profile/${username}/solutions?limit=${limit}&offset=${offset}`)
 
         return response?.data
     } catch (ex) {
@@ -156,7 +156,7 @@ const getQuestionDetails = async (postId, limit, offset, setLoading) => {
     setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/post/${postId}?limit=${limit}&offset=${offset}`)
+        const response = await api.get(`/error-report/${postId}?limit=${limit}&offset=${offset}`)
 
         return response?.data
     } catch (ex) {
@@ -172,7 +172,7 @@ const getPostAnswers = async (postId, limit, offset, setLoading) => {
     setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/post/${postId}/answers?limit=${limit}&offset=${offset}`)
+        const response = await api.get(`/solution/error-report/${postId}?limit=${limit}&offset=${offset}`)
 
         return response?.data
     } catch (ex) {
@@ -189,7 +189,7 @@ const postQuestion = async (questionDetails, setLoading) => {
 
     try {
         const response = await api.post(
-            "/post/ask",
+            "/error-report",
             questionDetails
         )
 
@@ -203,13 +203,13 @@ const postQuestion = async (questionDetails, setLoading) => {
     }
 }
 
-const postAnswer = async (postId, body, setLoading) => {
+const postAnswer = async (postId, solutionDetails, setLoading) => {
     setLoading(true)
 
     try {
         const response = await api.post(
-            `/post/${postId}/answer`,
-            { body }
+            `/solution/error-report/${postId}`,
+            solutionDetails
         )
 
         return response?.data
@@ -222,13 +222,13 @@ const postAnswer = async (postId, body, setLoading) => {
     }
 }
 
-const updateAnswer = async (postId, body, setLoading) => {
+const updateAnswer = async (postId, solutionDetails, setLoading) => {
     setLoading(true)
 
     try {
         const response = await api.put(
-            `/post/answer/${postId}`,
-            { body }
+            `/solution/${postId}`,
+            solutionDetails
         )
 
         return response?.data
@@ -246,7 +246,7 @@ const deleteAnswer = async (postId, setLoading) => {
 
     try {
         const response = await api.delete(
-            `/post/answer/${postId}`
+            `/solution/${postId}`
         )
 
         return response?.data
@@ -264,7 +264,7 @@ const updateQuestion = async (postId, questionDetails, setLoading) => {
 
     try {
         const response = await api.put(
-            `/post/question/${postId}`,
+            `/error-report/${postId}`,
             questionDetails
         )
 
@@ -281,7 +281,7 @@ const updateQuestion = async (postId, questionDetails, setLoading) => {
 const deleteQuestion = async (postId) => {
     try {
         const response = await api.delete(
-            `/post/question/${postId}`
+            `/error-report/${postId}`
         )
 
         return response?.data
@@ -293,11 +293,11 @@ const deleteQuestion = async (postId) => {
 }
 
 // ── Comments ──────────────────────────────────────────────────
-const getPostComments = async (postId, limit, offset, setLoading) => {
+const getPostComments = async (parentId, parentType, limit, offset, setLoading) => {
     setLoading && setLoading(true)
 
     try {
-        const response = await api.get(`/comment?postId=${postId}&limit=${limit}&offset=${offset}`)
+        const response = await api.get(`/comment?parentId=${parentId}&parentType=${parentType}&limit=${limit}&offset=${offset}`)
 
         return response?.data
     } catch (ex) {
@@ -458,7 +458,7 @@ const toggleAnswerStatus = async (toggleDetails, setLoading) => {
 
     try {
         const response = await api.post(
-            "/post/toggleStatus",
+            "/solution/toggleStatus",
             toggleDetails
         )
 

@@ -1,9 +1,9 @@
 const errorHandler = (message) => {
-    console.error("[Error]: ", message)
+    if (import.meta.env.DEV) { console.error("[Error]: ", message) }
 }
 
 const infoHandler = (message) => {
-    console.error("[Info]: ", message)
+    if (import.meta.env.DEV) { console.info("[Info]: ", message) }
 }
 
 const logging = {

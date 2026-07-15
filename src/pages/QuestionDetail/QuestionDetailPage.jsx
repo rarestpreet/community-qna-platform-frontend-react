@@ -6,12 +6,11 @@ import PageLoader from "../../components/ui/PageLoader"
 import QuestionCard from "./QuestionCard"
 import AnswersList from "./AnswersList"
 import NavBar from "../../components/NavBar"
-import helperFunctions from "../../services/helperFunctions"
 import AnswerModal from "../../components/ui/AnswerModal"
 import useInfiniteScroll from "../../hooks/useInfiniteScroll"
 
 export default function QuestionDetailPage() {
-    const { encryptedPostId } = useParams()
+    const { errorReportID: id } = useParams()
     const { userProfile } = useUserContext()
     const [question, setQuestion] = useState(null)
     const [isAnswerModalOpen, setIsAnswerModalOpen] = useState(false)
@@ -22,21 +21,19 @@ export default function QuestionDetailPage() {
     const [offset, setOffset] = useState(0)
     const [hasMoreAnswers, setHasMoreAnswers] = useState(true)
     const [isFetchingMoreAnswers, setIsFetchingMoreAnswers] = useState(false)
-    const [answers, setAnswers] = useState([])
-
-    const postId = helperFunctions.decryptNavId(encryptedPostId)
+    const [solutions, setSolutions] = useState([])
 
     useEffect(() => {
         fetchQuestion(true)
-    }, [postId])
+    }, [id])
 
     const fetchQuestion = async (isInitial = false) => {
         const fetchLimit = isInitial ? limit : (offset === 0 ? limit : offset)
-        const data = await apiCall.getQuestionDetails(postId, fetchLimit, 0, setLoading)
+        const data = await apiCall.getQuestionDetails(id, fetchLimit, 0, setLoading)
         if (data) {
             setQuestion(data)
-            setAnswers(data.answers || [])
-            setHasMoreAnswers(data.hasMoreAnswers)
+            setSolutions(data.solutions || [])
+            setHasMoreAnswers(data.hasMoreSolutions)
             if (isInitial) setOffset(limit)
         }
     }
@@ -44,11 +41,11 @@ export default function QuestionDetailPage() {
     const loadMoreAnswers = async () => {
         if (!hasMoreAnswers || isFetchingMoreAnswers) return
         setIsFetchingMoreAnswers(true)
-        const response = await apiCall.getPostAnswers(postId, limit, offset)
+        const response = await apiCall.getPostAnswers(id, limit, offset)
         if (response && response.data) {
-            setAnswers(prev => {
-                const existingIds = new Set(prev.map(a => a.postId))
-                const newAnswers = response.data.filter(a => !existingIds.has(a.postId))
+            setSolutions(prev => {
+                const existingIds = new Set(prev.map(a => a.id))
+                const newAnswers = response.data.filter(a => !existingIds.has(a.id))
                 return [...prev, ...newAnswers]
             })
             setHasMoreAnswers(response.pageData.hasMore)
@@ -66,8 +63,8 @@ export default function QuestionDetailPage() {
     }
 
     // ── Comment handlers ──
-    const handleAddComment = async (targetPostId, body) => {
-        const result = await apiCall.postComment({ postId: targetPostId, body }, setCommentLoader)
+    const handleAddComment = async (targetPostId, body, commentType) => {
+        const result = await apiCall.postComment({ postId: targetPostId, body, commentType }, setCommentLoader)
         await fetchQuestion()
         return result
     }
@@ -84,7 +81,7 @@ export default function QuestionDetailPage() {
     }
 
     const handleToggleAnswerStatus = async (answerId) => {
-        await apiCall.toggleAnswerStatus({ questionId: question.postId, answerId: answerId }, setLoading)
+        await apiCall.toggleAnswerStatus({ errorReportId: question.id, solutionId: answerId }, setLoading)
         await fetchQuestion()
     }
 
@@ -99,7 +96,7 @@ export default function QuestionDetailPage() {
         )
     }
 
-    if (!question || !question.postId) {
+    if (!question || !question.id) {
         return (
             <div className="min-h-screen bg-gray-50">
                 <NavBar />
@@ -110,8 +107,8 @@ export default function QuestionDetailPage() {
         )
     }
 
-    const isClosed = question.postStatus === "CLOSED"
-    const isAdmin = userProfile?.roles?.includes("ADMIN") || false
+    const isClosed = question.status === "CLOSED"
+    const isAdmin = userProfile?.roles === "ADMIN" || false
     const isLoggedIn = !!userProfile?.username
     const canAnswer = isLoggedIn && !isClosed && !question.operable && !isAdmin
 
@@ -123,8 +120,8 @@ export default function QuestionDetailPage() {
                 {/* Question */}
                 <QuestionCard
                     question={question}
-                    onVote={(voteType) => handleVote(question.postId, voteType)}
-                    onAddComment={(body) => handleAddComment(question.postId, body)}
+                    onVote={(voteType) => handleVote(question.id, voteType)}
+                    onAddComment={(body, commentType) => handleAddComment(question.id, body, commentType)}
                     onDeleteComment={handleDeleteComment}
                     onUpdateComment={handleUpdateComment}
                     isLoggedIn={isLoggedIn}
@@ -148,9 +145,9 @@ export default function QuestionDetailPage() {
                 )}
 
                 {/* Answers */}
-                {answers?.length > 0 && (
+                {solutions?.length > 0 && (
                     <AnswersList
-                        answers={answers}
+                        answers={solutions}
                         onVote={handleVote}
                         onAddComment={handleAddComment}
                         onDeleteComment={handleDeleteComment}
@@ -182,7 +179,7 @@ export default function QuestionDetailPage() {
                         await fetchQuestion()
                     }}
                     operation="POST"
-                    postId={postId}
+                    postId={id}
                 />
             )}
         </div>

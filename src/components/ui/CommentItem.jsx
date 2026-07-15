@@ -29,6 +29,11 @@ function CommentItem({ key, comment, onDelete, onEdit, isLoggedIn }) {
                 {comment.authorUsername[0].toUpperCase()}
             </div>
             <p className="text-sm text-gray-700 border-l-2 border-gray-200 pl-2 flex-1 leading-relaxed">
+                {comment.type && (
+                    <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase mr-2 bg-gray-200 text-gray-600">
+                        {comment.type}
+                    </span>
+                )}
                 {comment.body}
             </p>
 

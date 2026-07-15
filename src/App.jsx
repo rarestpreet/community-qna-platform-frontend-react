@@ -33,7 +33,7 @@ function App() {
 
       <Route path="/ask" element={<AskQuestionPage />} />
       <Route path="/profile/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/question/:encryptedPostId" element={<QuestionDetailPage />} />
+      <Route path="/question/:errorReportID" element={<QuestionDetailPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
     </Routes>

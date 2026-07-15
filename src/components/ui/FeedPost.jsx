@@ -2,7 +2,6 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import Badge from "./Badge"
 import TagPill from "./TagPill"
-import helperFunctions from "../../services/helperFunctions"
 
 /**
  * FeedPost — post card in the home feed.
@@ -19,14 +18,13 @@ import helperFunctions from "../../services/helperFunctions"
  */
 function FeedPost({ post }) {
     const navigate = useNavigate()
-    const { navigationPostId, authorUsername, title, score, updatedAt, postStatus, tags } = post
+    const { navigationId, authorUsername, title, score, updatedAt, status, tags } = post
     const [hoverIndex, setHoverIndex] = useState(null)
-    const navigateTo = helperFunctions.encryptNavId(navigationPostId)
 
     return (
         <div
-            key={navigationPostId}
-            onClick={() => navigate(`/question/${navigateTo}`)}
+            key={navigationId}
+            onClick={() => navigate(`/question/${navigationId}`)}
             className="group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm
                 flex gap-6 items-center w-full
                 hover:shadow-lg hover:border-brand-300 hover:-translate-y-0.5
@@ -73,7 +71,7 @@ function FeedPost({ post }) {
 
             {/* Meta section */}
             <div className="flex flex-col items-end gap-3 shrink-0">
-                <Badge status={postStatus} />
+                <Badge status={status} />
                 <div className="flex flex-col items-end gap-0.5 text-xs font-medium text-gray-400">
                     <span className="text-gray-500">
                         Author: <span className="text-gray-700 font-semibold">{authorUsername}</span>
