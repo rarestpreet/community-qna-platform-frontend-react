@@ -1,40 +1,12 @@
 import { useState, useEffect } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
-import { FaTag, FaQuestionCircle, FaLightbulb, FaAlignLeft, FaExclamationCircle, FaCode, FaServer, FaBug } from "react-icons/fa"
-import TagPill from "../../components/ui/TagPill"
 import apiCall from "../../services/apiCall"
 import { useUserContext } from "../../context/userContext"
 import TabLoader from "../../components/ui/TabLoader"
 import NavBar from "../../components/NavBar"
 import { LANGUAGES, OS_OPTIONS, FRAMEWORKS_BY_LANGUAGE } from "../../util/constants"
+import { FaBug, FaExclamationCircle, FaInfoCircle, FaCode, FaTag, FaAlignLeft, FaFolderOpen, FaServer, FaTerminal, FaSpinner, FaPaperPlane } from "react-icons/fa"
 
-/* ── Helpers ────────────────────────────────────────────────── */
-function CharCounter({ current, min, max }) {
-    const isOver = current > max
-    const isUnder = current < min
-    const color = isOver
-        ? "text-red-500"
-        : isUnder && current > 0
-            ? "text-amber-500"
-            : "text-gray-400"
-
-    return (
-        <span className={`text-xs font-medium tabular-nums ${color}`}>
-            {current} / {max}
-        </span>
-    )
-}
-
-function FieldHint({ icon: Icon, children }) {
-    return (
-        <div className="flex items-start gap-2 bg-brand-50 border border-brand-100 rounded-xl p-3 text-sm text-brand-800">
-            <Icon className="mt-0.5 shrink-0 text-brand-500" />
-            <p>{children}</p>
-        </div>
-    )
-}
-
-/* ── Page ────────────────────────────────────────────────────── */
 export default function AskQuestionPage({ initialBody = "" }) {
     const navigate = useNavigate()
     const location = useLocation()
@@ -47,7 +19,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
     const [description, setDescription] = useState(editingQuestion?.description || initialBody)
     const [selectedTagIds, setSelectedTagIds] = useState(editingQuestion?.tags?.map(t => t.tagId) || [])
     
-    // New Fields
+    // Updated Fields (merged framework, os, language versions)
     const [errorType, setErrorType] = useState(editingQuestion?.errorType || "")
     const [language, setLanguage] = useState(editingQuestion?.language || "")
     const [languageVersion, setLanguageVersion] = useState(editingQuestion?.languageVersion || "")
@@ -56,10 +28,14 @@ export default function AskQuestionPage({ initialBody = "" }) {
     const [os, setOs] = useState(editingQuestion?.os || "")
     const [osVersion, setOsVersion] = useState(editingQuestion?.osVersion || "")
     const [reproductionSteps, setReproductionSteps] = useState(editingQuestion?.reproductionSteps || "")
+    
+    // Project Info
     const [repositoryUrl, setRepositoryUrl] = useState(editingQuestion?.repositoryUrl || "")
     const [branch, setBranch] = useState(editingQuestion?.branch || "")
     const [commitHash, setCommitHash] = useState(editingQuestion?.commitHash || "")
     const [filePath, setFilePath] = useState(editingQuestion?.filePath || "")
+    
+    // Debug Info
     const [relevantCode, setRelevantCode] = useState(editingQuestion?.relevantCode || "")
     const [relevantLog, setRelevantLog] = useState(editingQuestion?.relevantLog || "")
 
@@ -67,6 +43,8 @@ export default function AskQuestionPage({ initialBody = "" }) {
     const [submitError, setSubmitError] = useState("")
     const [availableTags, setAvailableTags] = useState([])
     const [tagsFetched, setTagsFetched] = useState(false)
+    const [showPreview, setShowPreview] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     // Redirect if not logged in or is ADMIN
     useEffect(() => {
@@ -79,7 +57,9 @@ export default function AskQuestionPage({ initialBody = "" }) {
     useEffect(() => {
         if (userProfile?.username && !tagsFetched) {
             const fetchTags = async () => {
-                await apiCall.getAllTags(setLoading, setAvailableTags)
+                try {
+                    await apiCall.getAllTags(100, 0, setLoading, setAvailableTags)
+                } catch (err) { }
                 setTagsFetched(true)
             }
             fetchTags()
@@ -88,7 +68,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+            <div className="min-h-screen bg-surface flex items-center justify-center">
                 <TabLoader rows={3} />
             </div>
         )
@@ -124,17 +104,17 @@ export default function AskQuestionPage({ initialBody = "" }) {
         const errs = validate()
         if (Object.keys(errs).length > 0) {
             setErrors(errs)
-            // Scroll to top to show errors
             window.scrollTo({ top: 0, behavior: 'smooth' })
             return
         }
         setErrors({})
         setSubmitError("")
+        setIsSubmitting(true)
 
         const payload = {
             title, description, tagIds: selectedTagIds,
-            errorType, language, languageVersion, framework, frameworkVersion,
-            os, osVersion, reproductionSteps, repositoryUrl, branch, commitHash,
+            errorType, language, languageVersion, framework, frameworkVersion, os, osVersion,
+            reproductionSteps, repositoryUrl, branch, commitHash,
             filePath, relevantCode, relevantLog
         }
 
@@ -142,6 +122,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
             const result = await apiCall.updateQuestion(editingQuestion.id, payload, setLoading)
             if (result && typeof result !== "string") {
                 setSubmitError(result?.message || "Failed to update question. Please try again.")
+                setIsSubmitting(false)
                 return
             }
             navigate(-1)
@@ -149,6 +130,7 @@ export default function AskQuestionPage({ initialBody = "" }) {
             const result = await apiCall.postQuestion(payload, setLoading)
             if (result && typeof result !== "string") {
                 setSubmitError(result?.message || "Failed to post question. Please try again.")
+                setIsSubmitting(false)
                 return
             }
             navigate("/")
@@ -164,145 +146,227 @@ export default function AskQuestionPage({ initialBody = "" }) {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-16">
+        <div className="min-h-screen bg-surface-container-lowest font-sans selection:bg-primary selection:text-on-primary">
             <NavBar />
+            
+            <header className="bg-surface border-b border-outline-variant py-8 shadow-sm">
+                <div className="max-w-[900px] mx-auto px-6">
+                    <div className="flex items-center gap-3 mb-2">
+                        <FaBug className="text-primary text-[32px]" />
+                        <h1 className="text-display-sm text-on-surface font-bold tracking-tight">
+                            {isEditMode ? "Edit Error Report" : "Submit Error Report"}
+                        </h1>
+                    </div>
+                    <p className="text-on-surface-variant text-body-lg max-w-2xl">
+                        Help the community understand your issue by providing clear, detailed, and reproducible information.
+                    </p>
+                </div>
+            </header>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
-                <h1 className="text-3xl font-bold text-gray-900 mb-8">
-                    {isEditMode ? "Edit your Error Report" : "Report an Error"}
-                </h1>
+            <main className="max-w-[900px] mx-auto px-6 py-8">
+                {submitError && (
+                    <div className="mb-6 flex items-center gap-2 bg-error/10 border border-error/20 text-error rounded-xl px-4 py-3 text-sm font-medium">
+                        <FaExclamationCircle />
+                        {submitError}
+                    </div>
+                )}
                 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-8" noValidate>
+                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
                     {/* Basic Info */}
-                    <section className="card p-6 flex flex-col gap-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FaQuestionCircle className="text-brand-500" />
-                            <h2 className="font-bold text-gray-800 text-lg">Basic Details</h2>
+                    <section className="bg-surface border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-2 text-primary">
+                            <FaInfoCircle />
+                            <h2 className="font-headline-md">Basic Information</h2>
                         </div>
-                        
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label htmlFor="question-title" className="text-sm font-semibold text-gray-700">
-                                    Title <span className="text-red-500">*</span>
-                                </label>
-                                <CharCounter current={title.length} min={15} max={100} />
-                            </div>
-                            <input
-                                id="question-title"
+                        <div className="space-y-1">
+                            <label className="text-label-md text-on-surface">Title <span className="text-error">*</span></label>
+                            <input 
+                                className={`w-full bg-surface-container-lowest border ${errors.title ? 'border-error' : 'border-outline-variant'} rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all`} 
+                                placeholder="e.g. TypeError: Cannot read properties of undefined (reading 'map')" 
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
-                                placeholder="e.g. NullPointerException when querying database"
-                                className={`input-field ${errors.title ? "input-error" : ""}`}
-                                maxLength={100}
                             />
-                            {errors.title && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.title}</p>}
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label htmlFor="error-type" className="text-sm font-semibold text-gray-700">
-                                    Error Type <span className="text-red-500">*</span>
-                                </label>
-                            </div>
-                            <input
-                                id="error-type"
-                                type="text"
-                                value={errorType}
-                                onChange={(e) => setErrorType(e.target.value)}
-                                placeholder="e.g. NullPointerException, TypeError"
-                                className={`input-field ${errors.errorType ? "input-error" : ""}`}
-                                maxLength={50}
-                            />
-                            {errors.errorType && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.errorType}</p>}
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label htmlFor="question-desc" className="text-sm font-semibold text-gray-700">
-                                    Description <span className="text-red-500">*</span>
-                                </label>
-                                <CharCounter current={description.length} min={50} max={5000} />
-                            </div>
-                            <textarea
-                                id="question-desc"
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                placeholder="Provide a detailed description of the error..."
-                                rows={5}
-                                maxLength={5000}
-                                className={`input-field resize-none ${errors.description ? "input-error" : ""}`}
-                            />
-                            {errors.description && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.description}</p>}
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label htmlFor="repro-steps" className="text-sm font-semibold text-gray-700">
-                                    Reproduction Steps <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                            </div>
-                            <textarea
-                                id="repro-steps"
-                                value={reproductionSteps}
-                                onChange={(e) => setReproductionSteps(e.target.value)}
-                                placeholder="1. Go to... 2. Click on... 3. See error..."
-                                rows={4}
-                                className="input-field resize-none"
-                            />
-                        </div>
-                    </section>
-
-                    {/* Environment Info */}
-                    <section className="card p-6 flex flex-col gap-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FaServer className="text-brand-500" />
-                            <h2 className="font-bold text-gray-800 text-lg">Environment Info</h2>
+                            {errors.title && <p className="text-error text-xs mt-1">{errors.title}</p>}
                         </div>
                         
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    Language <span className="text-red-500">*</span>
-                                </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Error Type <span className="text-error">*</span></label>
+                                <input 
+                                    className={`w-full bg-surface-container-lowest border ${errors.errorType ? 'border-error' : 'border-outline-variant'} rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all`} 
+                                    placeholder="e.g. TypeError, NullPointerException" 
+                                    type="text"
+                                    value={errorType}
+                                    onChange={(e) => setErrorType(e.target.value)}
+                                />
+                                {errors.errorType && <p className="text-error text-xs mt-1">{errors.errorType}</p>}
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Primary Language <span className="text-error">*</span></label>
                                 <select 
+                                    className={`w-full bg-surface-container-lowest border ${errors.language ? 'border-error' : 'border-outline-variant'} rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all`} 
                                     value={language}
                                     onChange={(e) => {
                                         setLanguage(e.target.value);
-                                        setFramework(""); // reset framework when language changes
+                                        setFramework("");
                                     }}
-                                    className={`input-field ${errors.language ? "input-error" : ""}`}
                                 >
                                     <option value="" disabled>Select language</option>
                                     {LANGUAGES.map(lang => (
                                         <option key={lang} value={lang}>{lang}</option>
                                     ))}
                                 </select>
-                                {errors.language && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.language}</p>}
+                                {errors.language && <p className="text-error text-xs mt-1">{errors.language}</p>}
                             </div>
-                            
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    Language Version <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                                <input
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Language Version</label>
+                                <input 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
+                                    placeholder="e.g. 17, 3.11"
                                     type="text"
                                     value={languageVersion}
                                     onChange={(e) => setLanguageVersion(e.target.value)}
-                                    placeholder="e.g. 17, 3.11"
-                                    className="input-field"
-                                    maxLength={10}
                                 />
                             </div>
+                        </div>
 
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    Framework <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
+                        <div className="space-y-1">
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="text-label-md text-on-surface">Description <span className="text-error">*</span></label>
+                                <span className={`text-label-sm ${description.length > 5000 ? 'text-error' : 'text-outline'}`} id="char-counter">{description.length} / 5000</span>
+                            </div>
+                            {showPreview ? (
+                                <div className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3 min-h-[200px] prose prose-sm max-w-none">
+                                    {description ? description : <span className="text-outline">No description provided.</span>}
+                                </div>
+                            ) : (
+                                <textarea 
+                                    className={`w-full bg-surface-container-lowest border ${errors.description ? 'border-error' : 'border-outline-variant'} rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none transition-all font-body-md text-on-surface leading-relaxed`}
+                                    id="markdown-editor" 
+                                    placeholder="Describe what you were trying to do, what happened instead, and any additional context. Markdown is supported." 
+                                    rows="8"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                ></textarea>
+                            )}
+                            {errors.description && <p className="text-error text-xs mt-1">{errors.description}</p>}
+                            <div className="flex items-center gap-2 mt-2 text-label-sm text-outline">
+                                <FaCode className="text-[16px]" />
+                                <span>Markdown formatting is supported</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-label-md text-on-surface">Tags ({selectedTagIds.length}/5) <span className="text-error">*</span></label>
+                            <div className="flex flex-wrap gap-2 p-3 bg-surface-container-lowest border border-outline-variant rounded-lg min-h-[50px] items-center">
+                                {availableTags?.length > 0 ? (
+                                    availableTags.map((tag) => {
+                                        const isSelected = selectedTagIds.includes(tag.tagId)
+                                        return (
+                                            <button 
+                                                key={tag.tagId}
+                                                type="button"
+                                                onClick={() => toggleTag(tag.tagId)}
+                                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-label-sm transition-colors border
+                                                    ${isSelected 
+                                                        ? 'bg-primary text-on-primary border-primary hover:bg-primary/90' 
+                                                        : 'bg-surface border-outline-variant text-on-surface-variant hover:bg-surface-container-low'}`}
+                                            >
+                                                <FaTag className="text-[14px]" />
+                                                {tag.name}
+                                            </button>
+                                        )
+                                    })
+                                ) : (
+                                    <span className="text-outline text-sm">No tags available.</span>
+                                )}
+                            </div>
+                            {errors.tags && <p className="text-error text-xs mt-1">{errors.tags}</p>}
+                        </div>
+                    </section>
+
+                    {/* Reproduction Section */}
+                    <section className="bg-surface border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-2 text-primary">
+                            <FaAlignLeft />
+                            <h2 className="font-headline-md">Reproduction</h2>
+                        </div>
+                        <div className="space-y-1">
+                            <label className="text-label-md text-on-surface">Steps to Reproduce</label>
+                            <textarea 
+                                className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none transition-all font-body-md text-on-surface leading-relaxed" 
+                                placeholder="1. Go to '...'\n2. Click on '...'\n3. Scroll down to '...'\n4. See error" 
+                                rows="4"
+                                value={reproductionSteps}
+                                onChange={(e) => setReproductionSteps(e.target.value)}
+                            ></textarea>
+                        </div>
+                    </section>
+
+                    {/* Project Info Section */}
+                    <section className="bg-surface border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-2 text-primary">
+                            <FaFolderOpen />
+                            <h2 className="font-headline-md">Project Info</h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Repository URL</label>
+                                <input 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
+                                    placeholder="https://github.com/username/repo" 
+                                    type="text"
+                                    value={repositoryUrl}
+                                    onChange={(e) => setRepositoryUrl(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Branch</label>
+                                <input 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
+                                    placeholder="e.g. main, feature/auth" 
+                                    type="text"
+                                    value={branch}
+                                    onChange={(e) => setBranch(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Commit Hash</label>
+                                <input 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all font-mono" 
+                                    placeholder="e.g. a1b2c3d" 
+                                    type="text"
+                                    value={commitHash}
+                                    onChange={(e) => setCommitHash(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">File Path</label>
+                                <input 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all font-mono" 
+                                    placeholder="src/components/App.tsx" 
+                                    type="text"
+                                    value={filePath}
+                                    onChange={(e) => setFilePath(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Environment Section */}
+                    <section className="bg-surface border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-2 text-primary">
+                            <FaServer />
+                            <h2 className="font-headline-md">Environment</h2>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Framework</label>
                                 <select 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
                                     value={framework}
                                     onChange={(e) => setFramework(e.target.value)}
-                                    className="input-field"
                                     disabled={!language || !FRAMEWORKS_BY_LANGUAGE[language]}
                                 >
                                     <option value="">Select framework</option>
@@ -311,29 +375,22 @@ export default function AskQuestionPage({ initialBody = "" }) {
                                     ))}
                                 </select>
                             </div>
-
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    Framework Version <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                                <input
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Framework Version</label>
+                                <input 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
+                                    placeholder="e.g. 3.2.1" 
                                     type="text"
                                     value={frameworkVersion}
                                     onChange={(e) => setFrameworkVersion(e.target.value)}
-                                    placeholder="e.g. 3.2.1"
-                                    className="input-field"
-                                    maxLength={10}
                                 />
                             </div>
-
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    OS <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">OS / Platform</label>
                                 <select 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
                                     value={os}
                                     onChange={(e) => setOs(e.target.value)}
-                                    className="input-field"
                                 >
                                     <option value="">Select OS</option>
                                     {OS_OPTIONS.map(osOpt => (
@@ -341,179 +398,103 @@ export default function AskQuestionPage({ initialBody = "" }) {
                                     ))}
                                 </select>
                             </div>
-
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    OS Version <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                                <input
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">OS Version</label>
+                                <input 
+                                    className="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-primary focus:outline-none transition-all" 
+                                    placeholder="e.g. 11, 20.04" 
                                     type="text"
                                     value={osVersion}
                                     onChange={(e) => setOsVersion(e.target.value)}
-                                    placeholder="e.g. 11, 20.04"
-                                    className="input-field"
-                                    maxLength={10}
                                 />
                             </div>
                         </div>
                     </section>
 
-                    {/* Code & Logs */}
-                    <section className="card p-6 flex flex-col gap-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FaCode className="text-brand-500" />
-                            <h2 className="font-bold text-gray-800 text-lg">Code Context</h2>
+                    {/* Debug Info Section */}
+                    <section className="bg-surface border border-outline-variant rounded-xl p-6 space-y-4 shadow-sm">
+                        <div className="flex items-center gap-2 text-primary">
+                            <FaTerminal />
+                            <h2 className="font-headline-md">Debug Info</h2>
                         </div>
-                        
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="text-sm font-semibold text-gray-700">
-                                    Relevant Code <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
+                        <div className="space-y-6">
+                            <div className="space-y-1">
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="text-label-md text-on-surface">Relevant Code Snippet</label>
+                                    <span className="text-label-sm uppercase tracking-wider text-outline px-2 py-0.5 border border-outline-variant rounded bg-surface-container-low">CODE</span>
+                                </div>
+                                <div className="relative group">
+                                    <textarea 
+                                        className="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none transition-all font-mono text-sm text-on-surface leading-relaxed whitespace-pre" 
+                                        placeholder="// Paste code that triggers the error" 
+                                        rows="8"
+                                        value={relevantCode}
+                                        onChange={(e) => setRelevantCode(e.target.value)}
+                                    ></textarea>
+                                </div>
                             </div>
-                            <textarea
-                                value={relevantCode}
-                                onChange={(e) => setRelevantCode(e.target.value)}
-                                placeholder="Paste the code snippet causing the issue..."
-                                rows={6}
-                                className="input-field resize-none font-mono text-sm"
-                            />
-                        </div>
-
-                        <div>
-                            <div className="flex justify-between items-center mb-1">
-                                <label className="text-sm font-semibold text-gray-700">
-                                    Relevant Log <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                            </div>
-                            <textarea
-                                value={relevantLog}
-                                onChange={(e) => setRelevantLog(e.target.value)}
-                                placeholder="Paste the stack trace or log output..."
-                                rows={6}
-                                className="input-field resize-none font-mono text-sm bg-gray-50"
-                            />
-                        </div>
-                        
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    Repository URL <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={repositoryUrl}
-                                    onChange={(e) => setRepositoryUrl(e.target.value)}
-                                    placeholder="https://github.com/user/repo"
-                                    className="input-field"
-                                    maxLength={200}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    Branch <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={branch}
-                                    onChange={(e) => setBranch(e.target.value)}
-                                    placeholder="e.g. main, dev"
-                                    className="input-field"
-                                    maxLength={100}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    Commit Hash <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={commitHash}
-                                    onChange={(e) => setCommitHash(e.target.value)}
-                                    placeholder="e.g. 9c1f..."
-                                    className="input-field"
-                                    maxLength={100}
-                                />
-                            </div>
-                            <div>
-                                <label className="text-sm font-semibold text-gray-700 block mb-1">
-                                    File Path <span className="text-gray-400 font-normal">(Optional)</span>
-                                </label>
-                                <input
-                                    type="text"
-                                    value={filePath}
-                                    onChange={(e) => setFilePath(e.target.value)}
-                                    placeholder="e.g. src/main/App.java"
-                                    className="input-field"
-                                    maxLength={200}
-                                />
+                            <div className="space-y-1">
+                                <label className="text-label-md text-on-surface">Error Logs / Stack Trace</label>
+                                <textarea 
+                                    className="w-full bg-error/5 border border-error/20 rounded-lg px-4 py-3 focus:ring-2 focus:ring-error focus:outline-none transition-all font-mono text-sm text-error whitespace-pre" 
+                                    placeholder="Uncaught TypeError: Cannot read properties of undefined..." 
+                                    rows="5"
+                                    value={relevantLog}
+                                    onChange={(e) => setRelevantLog(e.target.value)}
+                                ></textarea>
                             </div>
                         </div>
                     </section>
 
-                    {/* Tags field */}
-                    <section className="card p-6 flex flex-col gap-4">
-                        <div className="flex items-center gap-2 mb-1">
-                            <FaTag className="text-brand-500" />
-                            <h2 className="font-bold text-gray-800 text-lg">Tags</h2>
-                        </div>
-
-                        <FieldHint icon={FaLightbulb}>
-                            Select 1 to 5 tags to describe what your question is about.
-                        </FieldHint>
-
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-semibold text-gray-700 block">
-                                Available Tags <span className="text-gray-400 font-normal">({selectedTagIds.length}/5 selected)</span>
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                                {availableTags?.length > 0 ? (
-                                    availableTags.map((tag) => {
-                                        const isSelected = selectedTagIds.includes(tag.tagId)
-                                        return (
-                                            <TagPill
-                                                key={tag.tagId}
-                                                tag={tag}
-                                                variant={isSelected ? "selected" : "default"}
-                                                onToggle={() => toggleTag(tag.tagId)}
-                                                showTooltip
-                                            />
-                                        )
-                                    })
-                                ) : (
-                                    <p className="text-sm text-gray-500">No tags available.</p>
-                                )}
-                            </div>
-                        </div>
-
-                        {errors.tags && (
-                            <p className="text-red-500 text-xs font-medium">{errors.tags}</p>
-                        )}
-                    </section>
-
-                    {/* Submit */}
-                    <div className="flex flex-col gap-3">
-                        {submitError && (
-                            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium animate-[fadeIn_200ms_ease-out]">
-                                <FaExclamationCircle className="shrink-0 text-red-500" />
-                                {submitError}
-                            </div>
-                        )}
-                        <div className="flex flex-col sm:flex-row gap-3 justify-end">
-                            <button
+                    {/* Form Actions */}
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-6">
+                        <button 
+                            className="w-full sm:w-auto px-6 py-2.5 text-on-surface-variant font-label-md hover:text-on-surface transition-colors" 
+                            type="button"
+                            onClick={() => navigate(-1)}
+                        >
+                            Cancel and Discard
+                        </button>
+                        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                            <button 
+                                className="px-6 py-2.5 bg-surface border border-outline-variant rounded-lg font-label-md text-on-surface hover:bg-surface-container-low active:scale-95 transition-all" 
                                 type="button"
-                                onClick={() => navigate(-1)}
-                                className="btn-secondary"
+                                onClick={() => setShowPreview(!showPreview)}
                             >
-                                Cancel
+                                {showPreview ? "Hide Preview" : "Preview Report"}
                             </button>
-                            <button type="submit" disabled={loading} className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed">
-                                {loading ? "Saving…" : isEditMode ? "Save Changes" : "Post Your Question"}
+                            <button 
+                                className="px-6 py-2.5 bg-primary text-on-primary rounded-lg font-label-md shadow-lg shadow-primary/20 hover:brightness-110 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed" 
+                                type="submit"
+                                disabled={isSubmitting}
+                            >
+                                <span>{isSubmitting ? "Processing..." : "Submit Report"}</span>
+                                {isSubmitting ? (
+                                    <FaSpinner className="animate-spin text-[18px]" />
+                                ) : (
+                                    <FaPaperPlane className="text-[18px]" />
+                                )}
                             </button>
                         </div>
                     </div>
                 </form>
-            </div>
+            </main>
+
+            {/* Footer */}
+            <footer className="bg-surface border-t border-outline-variant w-full py-8 mt-8">
+                <div className="flex flex-col md:flex-row justify-between items-center px-6 max-w-7xl mx-auto gap-4">
+                    <div className="flex flex-col items-center md:items-start">
+                        <span className="text-label-md font-bold text-on-surface">HearMeOut</span>
+                        <p className="text-on-surface-variant text-body-sm mt-1">© 2024 HearMeOut. Built for developers.</p>
+                    </div>
+                    <div className="flex gap-6">
+                        <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">About</a>
+                        <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Terms</a>
+                        <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">GitHub</a>
+                        <a className="text-on-surface-variant hover:text-primary transition-colors text-body-sm" href="#">Status</a>
+                    </div>
+                </div>
+            </footer>
         </div>
     )
 }
