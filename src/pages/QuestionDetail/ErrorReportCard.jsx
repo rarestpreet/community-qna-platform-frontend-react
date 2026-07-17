@@ -19,8 +19,9 @@ export default function ErrorReportCard({ question, onVote }) {
 
     // Derived state for operations
     const isAdmin = userProfile?.roles === "ADMIN" || false
-    const isLoggedIn = !!userProfile?.username
     const isOwner = userProfile?.username === question.authorUsername
+    const canVote    = userProfile?.roles === "VERIFIED_USER" && !isOwner  // backend: VoteController + can't vote own post
+    const canComment = userProfile?.roles === "USER" || userProfile?.roles === "VERIFIED_USER" // backend: CommentController
 
     const handleEdit = async () => {
         navigate("/ask", { state: { question } })
@@ -35,10 +36,9 @@ export default function ErrorReportCard({ question, onVote }) {
         <section className="bg-surface border border-outline-variant rounded-xl overflow-hidden shadow-sm relative">
             {/* Action Menu for Edit/Delete */}
             <div className="absolute top-2 right-2 z-10">
-                <ActionMenu
-                    isLoggedIn={isLoggedIn && !isAdmin}
+                                                <ActionMenu
                     operable={question.operable && !isAdmin && question.status !== "CLOSED" && question.postStatus !== "CLOSED"}
-                    canReport={!(question.operable && !isAdmin)}
+                    canReport={!isOwner && canComment && !isAdmin}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onReport={() => { }}
@@ -50,18 +50,18 @@ export default function ErrorReportCard({ question, onVote }) {
             <div className="p-4 md:p-5 border-b border-outline-variant flex gap-4">
                 {/* Voting Column */}
                 <div className="flex flex-col items-center min-w-[40px]">
-                    <button
-                        className={`transition-colors ${question.voteType === 'UPVOTE' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'} ${(!isLoggedIn || isAdmin || isOwner) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => (!isLoggedIn || isAdmin || isOwner) ? null : onVote('UPVOTE')}
-                        disabled={!isLoggedIn || isAdmin || isOwner}
+                                        <button
+                        className={`transition-colors ${question.voteType === 'UPVOTE' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'} ${!canVote ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => canVote ? onVote('UPVOTE') : null}
+                        disabled={!canVote}
                     >
                         <FaChevronUp className="text-[28px]" />
                     </button>
                     <span className="font-bold text-headline-md text-zinc-900 -my-1">{question.score || 0}</span>
                     <button
-                        className={`transition-colors ${question.voteType === 'DOWNVOTE' ? 'text-error' : 'text-on-surface-variant hover:text-error'} ${(!isLoggedIn || isAdmin || isOwner) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        onClick={() => (!isLoggedIn || isAdmin || isOwner) ? null : onVote('DOWNVOTE')}
-                        disabled={!isLoggedIn || isAdmin || isOwner}
+                        className={`transition-colors ${question.voteType === 'DOWNVOTE' ? 'text-error' : 'text-on-surface-variant hover:text-error'} ${!canVote ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => canVote ? onVote('DOWNVOTE') : null}
+                        disabled={!canVote}
                     >
                         <FaChevronDown className="text-[28px]" />
                     </button>
@@ -87,7 +87,7 @@ export default function ErrorReportCard({ question, onVote }) {
                             <div className="w-10 h-10 rounded-xl bg-primary overflow-hidden flex items-center justify-center text-sm font-bold text-on-primary shadow-sm">
                                 {question.authorUsername?.[0]?.toUpperCase()}
                             </div>
-                            <span className="text-[10px] font-bold text-on-surface uppercase tracking-wide">@{question.authorUsername}</span>
+                            <span className="text-[10px] font-bold text-on-surface tracking-wide">@{question.authorUsername}</span>
                         </div>
                         <span>•</span>
                         <span>{question.createdAt || question.updatedAt}</span>

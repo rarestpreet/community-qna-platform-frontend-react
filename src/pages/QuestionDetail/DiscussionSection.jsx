@@ -1,9 +1,12 @@
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { useNavigate } from "react-router-dom"
 import { FaExclamationCircle } from 'react-icons/fa'
+import { useUserContext } from "../../context/userContext"
 
-export default function DiscussionSection({ comments, onAddComment, onDeleteComment, onUpdateComment, isLoggedIn, commentLoader }) {
+export default function DiscussionSection({ comments, onAddComment, onDeleteComment, onUpdateComment, commentLoader }) {
     const navigate = useNavigate()
+    const { userProfile } = useUserContext()
+    const canComment = userProfile?.roles === "USER" || userProfile?.roles === "VERIFIED_USER"
     const [newComment, setNewComment] = useState("")
     const [newCommentType, setNewCommentType] = useState("DISCUSSION")
     const [commentError, setCommentError] = useState("")
@@ -80,7 +83,7 @@ export default function DiscussionSection({ comments, onAddComment, onDeleteComm
                 )}
             </div>
 
-            {isLoggedIn && (
+            {canComment && (
                 <div className="bg-surface border border-outline-variant rounded-xl p-4 shadow-sm">
                     <form onSubmit={handleSubmit}>
                         <textarea 

@@ -21,7 +21,6 @@ export default function SolutionsList({
     onDeleteComment, 
     onUpdateComment, 
     onToggleStatus, 
-    isLoggedIn, 
     isAdmin,
     commentLoader,
     operable,
@@ -42,7 +41,7 @@ export default function SolutionsList({
             {/* Solution List */}
             <div className="space-y-8">
                 {solutions.map(solution => (
-                    <SolutionCard 
+                            <SolutionCard 
                         key={solution.id}
                         solution={solution}
                         onVote={(voteType) => onVote(solution.id, voteType)}
@@ -50,7 +49,6 @@ export default function SolutionsList({
                         onDeleteComment={onDeleteComment}
                         onUpdateComment={onUpdateComment}
                         onToggleStatus={() => onToggleStatus(solution.id)}
-                        isLoggedIn={isLoggedIn}
                         isAdmin={isAdmin}
                         commentLoader={commentLoader}
                         operable={operable}
@@ -70,7 +68,6 @@ function SolutionCard({
     onDeleteComment, 
     onUpdateComment, 
     onToggleStatus,
-    isLoggedIn,
     isAdmin,
     commentLoader,
     operable,
@@ -79,8 +76,11 @@ function SolutionCard({
 }) {
     const [showComments, setShowComments] = useState(false)
     
+    const role = userProfile?.roles
     const isOwner = userProfile?.username === solution.authorUsername
-    const canToggleStatus = isLoggedIn && operable && !isAdmin
+    const canVote    = role === "VERIFIED_USER"                    // backend: VoteController
+    const canComment = role === "USER" || role === "VERIFIED_USER" // backend: CommentController
+    const canToggleStatus = operable && !isAdmin  // operable already implies authenticated ownership
     const isVerified = solution.status === 'VERIFIED'
 
     const handleEdit = () => {
@@ -99,10 +99,9 @@ function SolutionCard({
             
             {/* Action Menu for Edit/Delete */}
             <div className="absolute top-2 right-2 z-10">
-                <ActionMenu
-                    isLoggedIn={isLoggedIn && !isAdmin}
+                                                <ActionMenu
                     operable={isOwner && !isAdmin && solution.status !== "VERIFIED"}
-                    canReport={!isOwner && !isAdmin}
+                    canReport={!isOwner && canComment && !isAdmin}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onReport={() => {}}
@@ -152,10 +151,10 @@ function SolutionCard({
 
                     {/* Voting Box */}
                     <div className="flex items-center bg-surface-container rounded-lg px-2 py-1 gap-2 border border-outline-variant shrink-0">
-                        <button 
-                            className={`transition-colors ${solution.voteType === 'UPVOTE' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'} ${!isLoggedIn || isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            onClick={() => (!isLoggedIn || isAdmin) ? null : onVote('UPVOTE')}
-                            disabled={!isLoggedIn || isAdmin}
+                                                                        <button 
+                            className={`transition-colors ${solution.voteType === 'UPVOTE' ? 'text-primary' : 'text-on-surface-variant hover:text-primary'} ${!canVote ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => canVote ? onVote('UPVOTE') : null}
+                            disabled={!canVote}
                         >
                             <FaThumbsUp className="text-[16px]" />
                         </button>
@@ -163,9 +162,9 @@ function SolutionCard({
                             {solution.score || 0}
                         </span>
                         <button 
-                            className={`transition-colors ${solution.voteType === 'DOWNVOTE' ? 'text-error' : 'text-on-surface-variant hover:text-error'} ${!isLoggedIn || isAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            onClick={() => (!isLoggedIn || isAdmin) ? null : onVote('DOWNVOTE')}
-                            disabled={!isLoggedIn || isAdmin}
+                            className={`transition-colors ${solution.voteType === 'DOWNVOTE' ? 'text-error' : 'text-on-surface-variant hover:text-error'} ${!canVote ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => canVote ? onVote('DOWNVOTE') : null}
+                            disabled={!canVote}
                         >
                             <FaThumbsDown className="text-[16px]" />
                         </button>
@@ -212,12 +211,11 @@ function SolutionCard({
             {/* Comments Section */}
             {showComments && (
                 <div className="p-4 sm:p-6 bg-surface-container-lowest border-t border-outline-variant">
-                    <DiscussionSection 
+                                    <DiscussionSection 
                         comments={solution.comments || []}
                         onAddComment={onAddComment}
                         onDeleteComment={onDeleteComment}
                         onUpdateComment={onUpdateComment}
-                        isLoggedIn={isLoggedIn}
                         commentLoader={commentLoader}
                     />
                 </div>

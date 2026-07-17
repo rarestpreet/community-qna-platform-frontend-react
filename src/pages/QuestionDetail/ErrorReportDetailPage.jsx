@@ -110,9 +110,8 @@ export default function ErrorReportDetailPage() {
 
     const isClosed = question.status === "CLOSED"
     const isAdmin = userProfile?.roles === "ADMIN" || false
-    const isLoggedIn = !!userProfile?.username
     const isOwner = userProfile?.username === question.authorUsername || userProfile?.username === question.author?.username || question.operable
-    const canAnswer = isLoggedIn && !isClosed && !isOwner && !isAdmin
+    const canAnswer = !!userProfile?.username && !isClosed && !isOwner && !isAdmin
 
     return (
         <div className="min-h-screen bg-surface-container-lowest font-sans selection:bg-primary selection:text-on-primary">
@@ -131,21 +130,19 @@ export default function ErrorReportDetailPage() {
                         onAddComment={(body, type) => handleAddComment(question.id, body, type)}
                         onDeleteComment={handleDeleteComment}
                         onUpdateComment={handleUpdateComment}
-                        isLoggedIn={isLoggedIn}
                         commentLoader={commentLoader}
                         isOwner={userProfile?.username === question.author?.username}
                         isAdmin={isAdmin}
                     />
 
                     {solutions?.length > 0 && (
-                        <SolutionsList 
+                                            <SolutionsList 
                             solutions={solutions}
                             onVote={(solutionId, voteType) => handleVote(solutionId, 'SOLUTION', voteType)}
                             onAddComment={handleAddComment}
                             onDeleteComment={handleDeleteComment}
                             onUpdateComment={handleUpdateComment}
                             onToggleStatus={handleToggleAnswerStatus}
-                            isLoggedIn={isLoggedIn}
                             isAdmin={isAdmin}
                             commentLoader={commentLoader}
                             operable={question.operable}
