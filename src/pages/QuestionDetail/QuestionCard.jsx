@@ -48,7 +48,7 @@ function QuestionCard({ question, onVote, onAddComment, onDeleteComment, onUpdat
                 {/* Detailed Environment Fields */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 bg-gray-50 p-4 rounded-xl text-sm border border-gray-100">
                     <div>
-                        <span className="font-semibold text-gray-500 block text-xs uppercase tracking-wider">Error Type</span> 
+                        <span className="font-semibold text-gray-500 block text-xs uppercase tracking-wider">Error Type</span>
                         {question.errorType || "N/A"}
                     </div>
                     <div>

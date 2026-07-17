@@ -87,7 +87,7 @@ export default function QuestionDetailPage() {
 
     if (loading && !question) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-background">
                 <NavBar />
                 <div className="max-w-3xl mx-auto px-4 py-10">
                     <PageLoader text="Loading question..." />
@@ -98,9 +98,9 @@ export default function QuestionDetailPage() {
 
     if (!question || !question.id) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-background">
                 <NavBar />
-                <div className="max-w-3xl mx-auto px-4 py-10 text-center text-gray-500">
+                <div className="max-w-3xl mx-auto px-4 py-10 text-center text-on-surface-variant">
                     Question not found.
                 </div>
             </div>
@@ -113,7 +113,7 @@ export default function QuestionDetailPage() {
     const canAnswer = isLoggedIn && !isClosed && !question.operable && !isAdmin
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background">
             <NavBar />
 
             <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-8">
@@ -165,7 +165,7 @@ export default function QuestionDetailPage() {
                 )}
                 {isFetchingMoreAnswers && (
                     <div className="flex justify-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                 )}
             </div>
