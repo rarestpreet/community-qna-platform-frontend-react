@@ -55,30 +55,46 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
                     return (
                         <div
                             key={i}
-                            className="flex flex-col md:flex-row gap-5 items-start bg-surface-container-lowest
-                                   border border-outline-variant/20 rounded-2xl p-3
-                                   hover:border-primary/40 hover:shadow-md
-                                   transition-all duration-200 cursor-pointer group"
+                            className="flex flex-col md:flex-row gap-5 items-start justify-between bg-surface
+                                   border-b border-outline-variant/30 py-6 last:border-0
+                                   hover:bg-surface-container-low transition-all duration-300 cursor-pointer group"
                             onClick={() => navigate(`/question/${navigateTo}`)}
                         >
-                            {/* Vote / Status badges */}
-                            <div className="flex md:flex-col gap-2 min-w-[72px]">
-                                <div className="bg-primary-container text-on-primary-container px-3 py-2 rounded-xl text-center flex-1 md:flex-none">
-                                    <div className="text-lg font-black leading-none">{q.score ?? 0}</div>
-                                    <div className="text-[9px] uppercase font-bold tracking-tighter mt-0.5">Votes</div>
+                            {/* Main Content (Left) */}
+                            <div className="flex-1 min-w-0 pr-4">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Badge status={q.status || q.postStatus} />
+                                    <span className="text-on-surface-variant text-sm">
+                                        Asked {q.updatedAt}
+                                    </span>
+                                </div>
+                                <h2 className="text-lg font-semibold tracking-tight text-on-surface group-hover:text-primary transition-colors line-clamp-1 mb-1.5">
+                                    {q.title}
+                                </h2>
+                                <p className="text-on-surface-variant text-sm line-clamp-2 mb-3">
+                                    {q.description || q.body || "No description provided."}
+                                </p>
+                                
+                                {/* Tags */}
+                                <div className="flex flex-wrap gap-2">
+                                    {q.tags?.map((tag, idx) => (
+                                        <span key={idx} className="bg-surface-container text-on-surface px-2 py-1 rounded text-xs font-medium">
+                                            {tag.name || tag}
+                                        </span>
+                                    ))}
+                                    {(!q.tags || q.tags.length === 0) && (
+                                        <span className="bg-surface-container text-on-surface px-2 py-1 rounded text-xs font-medium">java</span>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Content */}
-                            <div className="flex-1 min-w-0">
-                                <h2 className="text-xl font-bold tracking-tight text-on-surface group-hover:text-primary transition-colors line-clamp-2">
-                                    {q.title}
-                                </h2>
-                                <span className="text-gray-500 text-xs">
-                                    Asked: <span className="text-gray-700 font-semibold">{q.updatedAt}</span>
-                                </span>
+                            {/* Score Block (Right) */}
+                            <div className="flex-shrink-0 mt-2 md:mt-0">
+                                <div className="bg-primary-container text-on-primary-container px-4 py-3 rounded-lg text-center min-w-[70px]">
+                                    <div className="text-xl font-bold leading-none">{q.score > 0 ? `+${q.score}` : (q.score || 0)}</div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider mt-1">Score</div>
+                                </div>
                             </div>
-                            <Badge status={q.status} />
                         </div>
                     )
                 })
@@ -106,32 +122,34 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
                     return (
                         <div
                             key={i}
-                            className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl p-6
-                                   hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer"
+                            className="flex flex-col md:flex-row gap-5 items-start justify-between bg-surface
+                                   border-b border-outline-variant/30 py-6 last:border-0
+                                   hover:bg-surface-container-low transition-all duration-300 cursor-pointer group"
                             onClick={() => navigate(`/question/${navigateTo}`)}
                         >
-                            {/* Header */}
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex gap-3 text-sm font-semibold text-on-surface-variant">
-                                    <FaCommentDots className="text-primary mt-0.5" />
-                                    Answered on: <span className="text-on-surface font-bold">{a.parentReportTitle}</span>
+                            <div className="flex-1 min-w-0 pr-4">
+                                {/* Header */}
+                                <div className="flex items-center gap-3 mb-2">
+                                    <Badge status={a.status || a.postStatus} />
+                                    <span className="text-on-surface-variant text-sm">
+                                        Answered on {a.updatedAt}
+                                    </span>
                                 </div>
-                                <Badge status={a.status} />
+                                <h2 className="text-lg font-semibold tracking-tight text-on-surface group-hover:text-primary transition-colors line-clamp-1 mb-1.5 flex items-center gap-2">
+                                    <FaCommentDots className="text-outline-variant shrink-0" />
+                                    {a.parentReportTitle}
+                                </h2>
+
+                                {/* Body */}
+                                <p className="text-on-surface-variant text-sm line-clamp-2 mb-2">{a.explanation}</p>
                             </div>
-
-                            {/* Body */}
-                            <p className="text-on-surface text-sm line-clamp-2 pl-7 mb-3">{a.explanation}</p>
-
-                            {/* Footer */}
-                            <div className="flex items-center justify-between gap-3 pl-7 text-xs text-on-surface-variant font-medium">
-                                <span className="flex items-center gap-1 text-primary bg-primary-container px-2.5 py-1 rounded-full font-bold">
-                                    <FaThumbsUp className="text-[10px]" />
-                                    {a.score ?? 0} score
-                                </span>
-                                <span className="flex items-center gap-1">
-                                    <FaClock className="text-[10px]" />
-                                    {a.updatedAt}
-                                </span>
+                            
+                            {/* Score Block (Right) */}
+                            <div className="flex-shrink-0 mt-2 md:mt-0">
+                                <div className="bg-primary-container text-on-primary-container px-4 py-3 rounded-lg text-center min-w-[70px]">
+                                    <div className="text-xl font-bold leading-none">{a.score > 0 ? `+${a.score}` : (a.score || 0)}</div>
+                                    <div className="text-[10px] uppercase font-bold tracking-wider mt-1">Score</div>
+                                </div>
                             </div>
                         </div>
                     )
@@ -159,26 +177,27 @@ function ProfileTabContent({ activeTab, questions, answers, comments, loading })
                     return (
                         <div
                             key={i}
-                            className="bg-surface-container-lowest border border-outline-variant/20 rounded-2xl p-6
-                                   hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer"
+                            className="flex flex-col md:flex-row gap-5 items-start justify-between bg-surface
+                                   border-b border-outline-variant/30 py-6 last:border-0
+                                   hover:bg-surface-container-low transition-all duration-300 cursor-pointer group"
                             onClick={() => navigate(`/question/${navigateTo}`)}
                         >
-                            {/* Header */}
-                            <div className="flex items-center gap-2 mb-3">
-                                <FaQuoteLeft className="text-secondary text-sm" />
-                                <span className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Commented on:</span>
-                                <span className="text-sm text-on-surface line-clamp-1 font-bold">{c.parentType}</span>
-                            </div>
+                            <div className="flex-1 min-w-0">
+                                {/* Header */}
+                                <div className="flex items-center gap-3 mb-2">
+                                    <span className="text-on-surface-variant text-sm">
+                                        Commented on {c.updatedAt}
+                                    </span>
+                                </div>
+                                <h2 className="text-sm font-semibold tracking-tight text-on-surface group-hover:text-primary transition-colors line-clamp-1 mb-2 flex items-center gap-2">
+                                    <FaQuoteLeft className="text-outline-variant shrink-0 text-xs" />
+                                    {c.parentType}
+                                </h2>
 
-                            {/* Body */}
-                            <p className="text-on-surface text-sm italic border-l-4 border-primary-container pl-4 leading-relaxed">
-                                {c.body}
-                            </p>
-
-                            {/* Footer */}
-                            <div className="mt-3 flex items-center gap-1 text-xs text-on-surface-variant font-medium">
-                                <FaClock className="text-[10px]" />
-                                {c.updatedAt}
+                                {/* Body */}
+                                <p className="text-on-surface text-sm italic border-l-2 border-outline-variant pl-3 leading-relaxed">
+                                    {c.body}
+                                </p>
                             </div>
                         </div>
                     )
