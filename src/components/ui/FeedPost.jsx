@@ -1,87 +1,104 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { FaRegClock, FaRegBookmark } from "react-icons/fa"
 import Badge from "./Badge"
-import TagPill from "./TagPill"
 
 /**
- * FeedPost — post card in the home feed.
+ * FeedPost — post card in the home feed matching the new design.
  * Props:
- *   - post: FeedPostResponseDTO { 
-   postId,
-   authorId,
-   title,
-   score,
-   createdAt,
-   status,
-   tags[]
-   }
+ *   - post: FeedErrorReportResponseDTO { 
+ *    navigationId,
+ *    authorUsername,
+ *    title,
+ *    description,
+ *    score,
+ *    updatedAt,
+ *    status,
+ *    tags[],
+ *    viewCount
+ *    }
  */
 function FeedPost({ post }) {
     const navigate = useNavigate()
-    const { navigationId, authorUsername, title, score, updatedAt, status, tags } = post
-    const [hoverIndex, setHoverIndex] = useState(null)
+    const { navigationId, authorUsername, title, description, score, viewCount, updatedAt, status, tags } = post
+
+    // Simple time ago formatter
+    const getTimeAgo = (dateStr) => {
+        if (!dateStr) return "Some time ago"
+        // dateStr is dd-MM-yyyy. We might not have exact time. 
+        // For simplicity just show the date.
+        return dateStr
+    }
 
     return (
-        <div
-            key={navigationId}
+        <article
             onClick={() => navigate(`/question/${navigationId}`)}
-            className="group bg-white border border-gray-100 rounded-2xl p-5 shadow-sm
-                flex gap-6 items-center w-full
-                hover:shadow-lg hover:border-brand-300 hover:-translate-y-0.5
-                transition-all duration-300 cursor-pointer"
+            className="group bg-surface-container-low hover:bg-surface-container border border-surface-container rounded-xl p-5 shadow-sm transition-all hover:shadow-md cursor-pointer"
         >
-            {/* Score section */}
-            <div className="flex flex-col items-center justify-center bg-gray-50 border border-gray-100
-                rounded-xl min-w-[70px] min-h-[70px] px-3 py-2 shrink-0
-                group-hover:bg-brand-50 group-hover:border-brand-100 transition-colors"
-            >
-                <span className="text-black group-hover:text-brand-600 font-bold text-2xl leading-none mb-1 transition-colors">
-                    {score}
-                </span>
-                <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-                    Score
-                </span>
+            <div className="flex justify-between items-center pb-3 border-b border-outline-variant mb-4">
+                <div className="flex items-center gap-3">
+                    <Badge status={status} />
+                    <span className="text-label-sm text-on-surface-variant flex items-center gap-1">
+                        <FaRegClock className="text-xs" />
+                        {getTimeAgo(updatedAt)}
+                    </span>
+                </div>
+                <div className="flex items-center gap-4 text-on-surface-variant">
+                    <div className="flex flex-col items-center">
+                        <span className="font-bold text-on-surface">{score || 0}</span>
+                        <span className="text-[10px] uppercase">Score</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                        <span className="font-bold text-on-surface">{viewCount || 0}</span>
+                        <span className="text-[10px] uppercase">Views</span>
+                    </div>
+                </div>
             </div>
 
-            {/* Main content */}
-            <div className="flex flex-col grow gap-2 items-start text-left min-w-0">
-                <h2 className="text-lg font-bold text-gray-900 leading-tight w-full">
-                    {title}
-                </h2>
-                <div className="flex flex-wrap gap-2 mt-1">
-                    {tags?.map((currTag, index) => (
-                        <div
-                            key={currTag.tagId}
-                            className="relative flex items-center justify-center"
-                            onMouseEnter={() => setHoverIndex(index)}
-                            onMouseLeave={() => setHoverIndex(null)}
-                        >
-                            <TagPill tag={currTag} variant="display" />
-                            {hoverIndex === index && currTag.description && (
-                                <div className="absolute top-full mt-2.5 px-3 py-1.5 bg-gray-800 text-white text-xs text-center leading-relaxed rounded shadow-lg z-20 pointer-events-none w-max max-w-[200px] sm:max-w-xs
-                                    after:content-[''] after:absolute after:bottom-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-b-gray-800"
-                                >
-                                    {currTag.description}
-                                </div>
+            <h3 className="font-headline-sm text-[20px] font-bold mb-2 group-hover:text-primary transition-colors leading-tight">
+                {title}
+            </h3>
+
+            {description && (
+                <p className="text-on-surface-variant text-body-sm line-clamp-3 mb-4">
+                    {description}
+                </p>
+            )}
+
+            <div className="flex justify-between items-center mt-2">
+                <div className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full overflow-hidden flex justify-center items-center font-bold text-[10px] bg-primary text-white">
+                        {authorUsername ? authorUsername.charAt(0).toUpperCase() : '?'}
+                    </div>
+                    <span className="text-xs font-medium text-on-surface">{authorUsername || 'Unknown'}</span>
+
+                    {tags && tags.length > 0 && (
+                        <div className="flex gap-2 ml-4 flex-wrap">
+                            {tags.slice(0, 3).map(tag => (
+                                <span key={tag.tagId} className="px-2 py-1 rounded bg-surface text-on-surface-variant text-[10px] font-label-md font-semibold tracking-wide uppercase">
+                                    {tag.name}
+                                </span>
+                            ))}
+                            {tags.length > 3 && (
+                                <span className="px-2 py-1 rounded bg-surface text-on-surface-variant text-[10px] font-label-md font-semibold">
+                                    +{tags.length - 3}
+                                </span>
                             )}
                         </div>
-                    ))}
+                    )}
                 </div>
-            </div>
 
-            {/* Meta section */}
-            <div className="flex flex-col items-end gap-3 shrink-0">
-                <Badge status={status} />
-                <div className="flex flex-col items-end gap-0.5 text-xs font-medium text-gray-400">
-                    <span className="text-gray-500">
-                        Author: <span className="text-gray-700 font-semibold">{authorUsername}</span>
-                    </span>
-                    <span className="text-gray-500">
-                        Modified at: <span className="text-gray-700 font-semibold">{updatedAt}</span>
-                    </span>
-                </div>
+                <button
+                    className="text-outline-variant hover:text-primary transition-colors p-1"
+                    onClick={(e) => {
+                        e.stopPropagation(); // prevent navigation
+                        // handle bookmark if backend supported it
+                    }}
+                >
+                    <FaRegBookmark />
+                </button>
             </div>
-        </div>
+        </article>
     )
 }
 
