@@ -73,17 +73,17 @@ function RegisterPage() {
     }
 
     return (
-        <div className="min-h-screen flex">
+        <div className="min-h-screen flex bg-background selection:bg-primary selection:text-on-primary">
             {/* Left panel — green branding */}
-            <div className="hidden lg:flex lg:w-1/2 bg-brand-500 flex-col justify-center items-center p-12 relative overflow-hidden">
-                <div className="absolute top-20 -left-20 w-64 h-64 bg-brand-400/30 rounded-full blur-3xl" />
-                <div className="absolute bottom-20 -right-20 w-80 h-80 bg-brand-600/30 rounded-full blur-3xl" />
+            <div className="hidden lg:flex lg:w-1/2 bg-primary flex-col justify-center items-center p-12 relative overflow-hidden">
+                <div className="absolute top-20 -left-20 w-64 h-64 bg-primary/30 rounded-full blur-3xl" />
+                <div className="absolute bottom-20 -right-20 w-80 h-80 bg-primary/30 rounded-full blur-3xl" />
 
                 <div className="relative z-10 text-center">
-                    <h1 className="text-5xl font-extrabold text-white mb-4 leading-tight">
+                    <h1 className="text-5xl font-extrabold text-on-primary mb-4 leading-tight">
                         Join the<br />Community
                     </h1>
-                    <p className="text-white/80 text-lg max-w-sm leading-relaxed">
+                    <p className="text-on-primary/80 text-lg max-w-sm leading-relaxed">
                         Create your account and start asking questions,
                         sharing answers, and growing your knowledge.
                     </p>
@@ -91,24 +91,24 @@ function RegisterPage() {
             </div>
 
             {/* Right panel — form */}
-            <div className="flex-1 flex items-center justify-center p-6 bg-gray-50">
+            <div className="flex-1 flex items-center justify-center p-6 bg-background">
                 <div className="w-full max-w-md">
                     <div className="flex justify-center mb-8 lg:hidden">
                         <BrandContainer />
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-                        <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
+                    <div className="bg-surface rounded-2xl shadow-lg border border-outline-variant p-8">
+                        <h2 className="text-2xl font-bold text-center text-on-surface mb-2">
                             Create Account
                         </h2>
-                        <p className="text-sm text-gray-500 text-center mb-6">
+                        <p className="text-sm text-on-surface-variant text-center mb-6">
                             Sign up for a free HearMeOut account
                         </p>
 
                         {/* Global error banner */}
                         {globalError && (
-                            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm font-medium mb-5 animate-[fadeIn_200ms_ease-out]">
-                                <FaExclamationCircle className="shrink-0 text-red-500" />
+                            <div className="flex items-center gap-2 bg-error-container border border-error text-on-error-container rounded-xl px-4 py-3 text-sm font-medium mb-5 animate-[fadeIn_200ms_ease-out]">
+                                <FaExclamationCircle className="shrink-0 text-error" />
                                 {globalError}
                             </div>
                         )}
@@ -141,17 +141,17 @@ function RegisterPage() {
 
                             <button
                                 type="submit"
-                                className="mt-3 w-full bg-black text-white font-bold text-lg py-3 rounded-xl
-                                    hover:bg-gray-800 transition-colors shadow-md active:scale-[0.98] cursor-pointer"
+                                className="mt-3 w-full bg-primary text-on-primary font-bold text-lg py-3 rounded-xl
+                                    hover:brightness-110 transition-all shadow-md shadow-primary/20 active:scale-[0.98] cursor-pointer"
                                 disabled={loading}
                             >
                                 {loading ? "Creating account..." : "Create Account"}
                             </button>
                         </form>
 
-                        <div className="text-center text-sm font-medium text-gray-600 mt-6">
+                        <div className="text-center text-sm font-medium text-on-surface-variant mt-6">
                             Already have an account?{" "}
-                            <Link to="/login" className="text-brand-600 hover:text-brand-700 hover:underline font-bold">
+                            <Link to="/login" className="text-primary hover:brightness-90 hover:underline font-bold">
                                 Sign in
                             </Link>
                         </div>
