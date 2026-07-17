@@ -49,20 +49,20 @@ function SideNavBar() {
     }
 
     return (
-        <aside className="h-full w-64 shrink-0 flex flex-col bg-surface-container-lowest border-r border-outline-variant/20 text-sm font-medium">
+        <aside className="h-full w-64 shrink-0 flex flex-col bg-surface-container-low border-r border-outline-variant/30 text-sm font-medium">
 
             {/* ── User header ── */}
-            <div className="p-5 pb-4">
+            <div className="p-6 pb-4">
                 {userProfile?.username ?
-                    (<div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-on-primary font-bold text-lg shadow-sm shrink-0">
+                    (<div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-on-primary font-black text-xl shadow-sm shrink-0">
                             {userProfile?.username?.charAt(0)?.toUpperCase() || "?"}
                         </div>
                         <div className="flex flex-col min-w-0">
                             <span className="text-sm font-bold text-on-surface truncate">
                                 {userProfile?.username || "User"}
                             </span>
-                            <span className="text-[10px] uppercase tracking-widest text-on-surface-variant">
+                            <span className="text-[10px] uppercase tracking-widest text-on-surface-variant mt-0.5">
                                 {isAdmin ? "Admin Console" : "User Console"}
                             </span>
                         </div>
@@ -71,7 +71,7 @@ function SideNavBar() {
                     (
                         <Link
                             to="/register"
-                            className="flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white px-4 py-4 rounded-xl font-bold text-sm transition-all shadow-sm cursor-pointer"
+                            className="flex items-center gap-2 bg-primary hover:brightness-110 text-on-primary px-4 py-4 rounded-xl font-bold text-sm transition-all shadow-sm cursor-pointer"
                         >
                             <span>Sign Up</span>
                             <FaArrowRight className="text-xs" />
@@ -79,12 +79,12 @@ function SideNavBar() {
                     )}
             </div>
 
-            <div className="mx-5 border-t border-outline-variant/20" />
+            <div className="mx-6 border-t border-outline-variant/30" />
 
             {/* ── Primary navigation ── */}
             {userProfile?.username && (
-                <nav className="flex flex-col gap-1 p-4 grow">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant px-3 mb-1">
+                <nav className="flex flex-col gap-1.5 p-4 grow">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant px-4 mb-2 mt-2">
                         Navigation
                     </p>
                     {navItems.map((item) => {
@@ -95,10 +95,10 @@ function SideNavBar() {
                                 key={item.label}
                                 to={item.path}
                                 replace
-                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 active:scale-[0.97]
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150 active:scale-[0.98]
                                 ${location.pathname === item.path
-                                        ? "bg-primary-container text-on-primary-container font-semibold shadow-sm"
-                                        : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low"
+                                        ? "bg-primary-container/20 text-primary font-bold shadow-sm"
+                                        : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50 font-medium"
                                     }
                                     ${item.path === "#" ? "cursor-not-allowed" : ""}
                                 `}
@@ -113,9 +113,9 @@ function SideNavBar() {
                     {/* Logout — inside Navigation section, at the bottom */}
                     <button
                         onClick={handleLogout}
-                        className="flex items-center gap-3 px-3 py-2.5 mt-auto rounded-xl text-error hover:bg-error/10 transition-all duration-150 active:scale-[0.97] cursor-pointer w-full text-left font-medium"
+                        className="flex items-center gap-3 px-4 py-3 mt-auto rounded-xl text-error hover:bg-error-container/20 transition-all duration-150 active:scale-[0.98] cursor-pointer w-full text-left font-bold"
                     >
-                        <FaSignOutAlt className="text-base" />
+                        <FaSignOutAlt className="text-lg" />
                         Logout
                     </button>
                 </nav>

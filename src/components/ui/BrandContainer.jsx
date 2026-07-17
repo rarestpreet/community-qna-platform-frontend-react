@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaTerminal } from "react-icons/fa";
 
 function BrandContainer() {
     const location = useLocation();
@@ -11,20 +11,22 @@ function BrandContainer() {
         isHomePage ? (
             <Link
                 to="/"
-                className="flex items-center gap-1.5 no-underline"
+                className="flex items-center gap-2 no-underline group"
             >
-                <span className="text-2xl font-extrabold text-black tracking-tight">
-                    HearMe<span className="text-brand-500">Out</span>
+                <div className="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                    <FaTerminal className="text-sm" />
+                </div>
+                <span className="text-2xl font-extrabold text-on-surface tracking-tight">
+                    HearMe<span className="text-primary">Out</span>
                 </span>
-
-                <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse mt-2" />
             </Link>
         ) : (
             <button
                 onClick={() => navigate(-1)}
-                className="flex items-center gap-2 bg-surface-container-lowest backdrop-blur-md border border-white/20 text-black px-3 py-2 rounded-xl font-bold shadow-sm select-none hover:border-primary/40 hover:shadow-md transition-all duration-200 cursor-pointer"
+                className="group flex items-center gap-2 bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-on-surface px-4 py-2 rounded-full font-bold text-sm transition-all duration-300 cursor-pointer"
             >
-                <FaArrowLeft />
+                <FaArrowLeft className="text-xs group-hover:-translate-x-1 transition-transform" />
                 Back
             </button>
         )
