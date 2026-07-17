@@ -16,6 +16,11 @@ let onSessionExpired = null
 export const registerSessionExpiredCallback = (cb) => {
     onSessionExpired = cb
 }
+export const triggerSessionExpired = (error) => {
+    if (onSessionExpired) {
+        onSessionExpired(error)
+    }
+}
 
 // ── Silent refresh interceptor ─────────────────────────────────
 let isRefreshing = false
@@ -63,7 +68,7 @@ api.interceptors.response.use(
         } catch (refreshError) {
             processPendingRequests(refreshError)
             // Both tokens expired — notify the app
-            if (onSessionExpired) onSessionExpired()
+            triggerSessionExpired(refreshError)
             return Promise.reject(refreshError)
         } finally {
             isRefreshing = false

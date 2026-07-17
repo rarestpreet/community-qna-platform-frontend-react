@@ -1,4 +1,4 @@
-import api from "../util/axiosConfig"
+import api, { triggerSessionExpired } from "../util/axiosConfig"
 import logging from "../util/logHandler"
 
 // ── Feed ──────────────────────────────────────────────────────
@@ -67,6 +67,19 @@ const terminateSession = async (setLoading, setUserProfile) => {
         return ex?.response.data
     } finally {
         setLoading(false)
+    }
+}
+
+const silentRefresh = async (showError = true) => {
+    try {
+        await api.get("/auth/refresh-token")
+        return true
+    } catch (ex) {
+        if (showError) {
+            logging.errorHandler(ex?.response?.data || "Silent refresh failed")
+        }
+        triggerSessionExpired(ex)
+        return false
     }
 }
 
@@ -363,11 +376,11 @@ const deleteComment = async (commentId, setCommentLoader) => {
 }
 
 // ── Votes ─────────────────────────────────────────────────────
-const submitVote = async (voteData, setLoading) => {
+const toggleVote = async (voteData, voteType, setLoading) => {
     setLoading(true)
 
     try {
-        const response = await api.post("/vote", voteData)
+        const response = await api.post(`/vote?voteType=${voteType}`, voteData)
 
         return response?.data
     } catch (ex) {
@@ -380,19 +393,20 @@ const submitVote = async (voteData, setLoading) => {
 }
 
 // ── Tags ──────────────────────────────────────────────────────
-const getAllTags = async (setLoading, setTags) => {
-    setLoading(true)
+const getAllTags = async (limit = 1000, offset = 0, setLoading, setTags) => {
+    if (setLoading) setLoading(true)
 
     try {
-        const response = await api.get("/tag")
+        const response = await api.get(`/tag?limit=${limit}&offset=${offset}`)
 
-        await setTags(response?.data || [])
+        if (setTags) setTags(response?.data.data || [])
+        return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
 
-        return ex?.response.data
+        return null
     } finally {
-        setLoading(false)
+        if (setLoading) setLoading(false)
     }
 }
 
@@ -581,6 +595,7 @@ const apiCall = {
     getUserComment,
     getUserQuestion,
     terminateSession,
+    silentRefresh,
     getQuestionDetails,
     getPostAnswers,
     getPostComments,
@@ -590,7 +605,7 @@ const apiCall = {
     postQuestion,
     postComment,
     deleteComment,
-    submitVote,
+    toggleVote,
     checkHealthPing,
     checkHealthSendCookie,
     checkHealthCors,
