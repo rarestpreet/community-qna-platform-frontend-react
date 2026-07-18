@@ -9,13 +9,10 @@ function SideNavBar() {
     const { loading, userProfile, setUserProfile, setLoading } = useUserContext()
 
     const isAdmin = userProfile?.roles?.includes("ADMIN") || false
-    const isOperable = userProfile?.username &&
-        (
-            location.pathname.includes(userProfile?.username) ||
-            location.pathname === "/profile/edit" ||
-            location.pathname === "/profile/verify-email" ||
-            location.pathname === "/profile/reset-password"
-        )
+    const searchParams = new URLSearchParams(location.search)
+    const currentTab = searchParams.get("tab")
+
+    const isOperable = userProfile?.username && location.pathname.includes(userProfile?.username)
 
     // ── Navigation items (role-based) ──
     let navItems = [
@@ -30,11 +27,11 @@ function SideNavBar() {
 
     // Operable links (Profile tools) - only shown when on own profile page
     if (!isAdmin && isOperable) {
-        navItems.push({ path: `/profile/${userProfile?.username}/edit`, label: "Edit Profile", icon: FaUserEdit })
+        navItems.push({ path: `/profile/${userProfile?.username}?tab=edit`, label: "Edit Profile", icon: FaUserEdit })
         if (!userProfile?.accountVerified) {
-            navItems.push({ path: `/profile/${userProfile?.username}/verify-email`, label: "Verify Email", icon: FaCheckCircle })
+            navItems.push({ path: `/profile/${userProfile?.username}?tab=verify-email`, label: "Verify Email", icon: FaCheckCircle })
         }
-        navItems.push({ path: `/profile/${userProfile?.username}/reset-password`, label: "Reset Password", icon: FaKey })
+        navItems.push({ path: `/profile/${userProfile?.username}?tab=reset-password`, label: "Reset Password", icon: FaKey })
     }
 
     // ── Bottom utility links (only for admin) ──
@@ -89,6 +86,8 @@ function SideNavBar() {
                     </p>
                     {navItems.map((item) => {
                         const Icon = item.icon
+                        const itemTab = new URLSearchParams(item.path.split('?')[1] || "").get("tab")
+                        const isActive = (itemTab && currentTab === itemTab) || (!itemTab && !currentTab && location.pathname === item.path)
 
                         return (
                             <Link
@@ -96,7 +95,7 @@ function SideNavBar() {
                                 to={item.path}
                                 replace
                                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-150 active:scale-[0.98]
-                                ${location.pathname === item.path
+                                ${isActive
                                         ? "bg-primary-container/20 text-primary font-bold shadow-sm"
                                         : "text-on-surface-variant hover:text-on-surface hover:bg-surface-container/50 font-medium"
                                     }

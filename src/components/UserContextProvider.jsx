@@ -55,8 +55,6 @@ function UserContextProvider({ children }) {
     useEffect(() => {
         if (!userProfile.username) return;
 
-        console.log(location.pathname);
-
         const now = Date.now();
         const timeSinceLastValidation = now - lastValidatedTime.current;
 
