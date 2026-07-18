@@ -171,6 +171,7 @@ const getQuestionDetails = async (postId, limit, offset, setLoading) => {
     try {
         const response = await api.get(`/error-report/${postId}?limit=${limit}&offset=${offset}`)
 
+        console.log("[getQuestionDetails] response:", response?.data)
         return response?.data
     } catch (ex) {
         logging.errorHandler(ex?.response?.data)
@@ -429,6 +430,24 @@ const createNewTag = async (tagData, setLoading) => {
     }
 }
 
+// ── Dictionary ────────────────────────────────────────────────
+const getDictionaryValues = async (type, search = "", limit = 10, setLoading) => {
+    if (setLoading) setLoading(true)
+
+    try {
+        const queryParams = new URLSearchParams({ limit })
+        if (search) queryParams.append("search", search)
+        
+        const response = await api.get(`/dictionary/${type}?${queryParams.toString()}`)
+        return response?.data
+    } catch (ex) {
+        logging.errorHandler(ex?.response?.data)
+        return null
+    } finally {
+        if (setLoading) setLoading(false)
+    }
+}
+
 // ── Health ────────────────────────────────────────────────────
 const checkHealthPing = async () => {
     try {
@@ -620,7 +639,8 @@ const apiCall = {
     sendVerificationOtp,
     verifyAccount,
     sendPasswordResetOtp,
-    resetPassword
+    resetPassword,
+    getDictionaryValues
 }
 
 export default apiCall
