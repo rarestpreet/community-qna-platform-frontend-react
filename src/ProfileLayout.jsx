@@ -15,24 +15,18 @@ function ProfileLayout() {
         return <PageLoader />
     }
 
-    const path = ["edit", "verify-email", "reset-password"]
+    const searchParams = new URLSearchParams(location.search)
+    const currentTab = searchParams.get("tab")
+    const validTabs = ["edit", "verify-email", "reset-password"]
 
-    if (path.includes(location.pathname.split("/").at(3) || "")) {
+    if (validTabs.includes(currentTab)) {
         if (!userProfile?.username) {
             navigate("/login")
             return null
         }
     }
 
-    if (path.includes(location.pathname.split("/").at(3))) {
-        if (userProfile?.username !== location.pathname.split("/").at(2)) {
-            navigate(`/profile/${userProfile?.username}`)
-            return null
-        }
-    }
-
-    if (location.pathname.includes("verify-email") &&
-        userProfile?.accountVerified) {
+    if (currentTab === "verify-email" && userProfile?.accountVerified) {
         navigate(`/profile/${userProfile?.username}`)
         return null
     }

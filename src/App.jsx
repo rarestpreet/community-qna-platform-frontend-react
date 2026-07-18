@@ -9,8 +9,6 @@ import SubmitSolutionPage from "./pages/SubmitSolution/SubmitSolutionPage"
 import ErrorReportDetailPage from "./pages/QuestionDetail/ErrorReportDetailPage"
 import AdminDashboard from "./pages/Admin/AdminDashboard"
 import HealthCheck from "./pages/Admin/HealthCheck"
-import EditProfilePage from "./pages/UserProfile/EditProfilePage"
-import VerifyEmailPage from "./pages/UserProfile/VerifyEmailPage"
 import ResetPasswordPage from "./pages/UserProfile/ResetPasswordPage"
 import { AdminOnly, AuthenticatedOnly } from "./components/CustomeRoutes"
 import ProfileLayout from "./ProfileLayout"
@@ -23,9 +21,6 @@ function App() {
         <Route path="" element={<ProfileLayout />}>
           <Route path="" element={<AuthenticatedOnly />}>
             <Route path="/profile/:username" element={<UserProfilePage />} />
-            <Route path="/profile/:username/edit" element={<EditProfilePage />} />
-            <Route path="/profile/:username/verify-email" element={<VerifyEmailPage />} />
-            <Route path="/profile/:username/reset-password" element={<ResetPasswordPage />} />
           </Route>
           <Route path="" element={<AdminOnly />}>
             <Route path="/health" element={<HealthCheck />} />
