@@ -23,35 +23,36 @@ export default function HomeRightSidebar() {
         <aside className="flex-1 lg:max-w-[30%] flex flex-col gap-6 sticky top-20">
             {/* Profile Summary Widget */}
             {userProfile?.username && (
-                <section className="bg-surface border border-surface-container rounded-xl p-6 shadow-sm">
-                    <div className="flex flex-col items-center text-center mb-6">
-                        <div className="w-20 h-20 rounded-full border-4 border-primary-container bg-primary-container/20 text-primary overflow-hidden mb-4 flex items-center justify-center text-2xl font-bold">
+                <section className="bg-surface border border-surface-container rounded-xl p-5 shadow-sm">
+                    <div className="flex flex-col items-center text-center mb-4">
+                        <div className="w-16 h-16 rounded-full border-4 border-primary-container bg-primary-container/20 text-primary overflow-hidden mb-3 flex items-center justify-center text-xl font-bold">
                             {userProfile.username.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-headline-sm text-headline-sm">{userProfile.username}</h4>
+                            <h4 className="font-headline-sm text-headline-sm">{userProfile.fullName || userProfile.username}</h4>
                             {userProfile.accountVerified || userProfile.isAccountVerified ? (
                                 <FaCheckCircle className="text-primary text-[16px]" title="Verified User" />
                             ) : (
                                 <FaExclamationTriangle className="text-tertiary text-[16px]" title="Unverified User" />
                             )}
                         </div>
+                        {userProfile.fullName && <p className="text-on-surface-variant text-body-sm font-medium">@{userProfile.username}</p>}
                         <p className="text-on-surface-variant text-body-sm font-medium">{userProfile.email}</p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                        <div className="flex flex-col items-center p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer">
+                    <div className="grid grid-cols-2 gap-3 mb-5">
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer">
                             <span className="font-bold text-primary">0</span>
                             <span className="text-[10px] text-on-surface-variant font-bold uppercase">My Reports</span>
                         </div>
-                        <div className="flex flex-col items-center p-3 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer">
+                        <div className="flex flex-col items-center p-2 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors cursor-pointer">
                             <span className="font-bold text-primary">0</span>
                             <span className="text-[10px] text-on-surface-variant font-bold uppercase">Saved</span>
                         </div>
                     </div>
 
                     <button
-                        onClick={() => navigate(`/profile/${userProfile.username}/edit`)}
+                        onClick={() => navigate(`/profile/${userProfile.username}?tab=edit`)}
                         className="w-full py-2 border border-surface-container rounded-xl text-body-sm font-bold hover:bg-surface-container transition-colors"
                     >
                         Edit Profile

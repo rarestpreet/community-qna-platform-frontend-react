@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { FaUser, FaEnvelope, FaSave, FaTrash, FaExclamationTriangle, FaTimes, FaCheckCircle } from "react-icons/fa"
 import apiCall from "../../services/apiCall"
 import TabLoader from "../../components/ui/TabLoader"
+import DictionaryPillInput from "../../components/ui/DictionaryPillInput"
 import { useUserProfileContext } from "../../context/userProfileContext"
 
 /* ── Delete Confirmation Modal ─────────────────────────── */
@@ -55,11 +56,23 @@ export default function EditProfilePage() {
 
     const [username, setUsername] = useState(userProfile.username || "")
     const [email, setEmail] = useState(userProfile.email || "")
+    const [fullName, setFullName] = useState(userProfile.fullName || "")
+    const [bio, setBio] = useState(userProfile.bio || "")
+    const [profession, setProfession] = useState(userProfile.profession || "")
     const [errors, setErrors] = useState({})
     const [successMsg, setSuccessMsg] = useState("")
     const [saveLoading, setSaveLoading] = useState(false)
     const [deleteLoading, setDeleteLoading] = useState(false)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
+    useEffect(() => {
+        if (userProfile?.username) {
+            setUsername(userProfile.username || "")
+            setEmail(userProfile.email || "")
+            setFullName(userProfile.fullName || "")
+            setBio(userProfile.bio || "")
+            setProfession(userProfile.profession || "")
+        }
+    }, [userProfile])
 
     if (loading) {
         return (
@@ -84,6 +97,8 @@ export default function EditProfilePage() {
         else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
             errs.email = "Please enter a valid email address."
 
+        if (!fullName.trim()) errs.fullName = "Full Name is required."
+
         return errs
     }
 
@@ -95,7 +110,7 @@ export default function EditProfilePage() {
         if (Object.keys(errs).length > 0) { setErrors(errs); return }
         setErrors({})
 
-        const result = await apiCall.updateUserProfile(userProfile.username, { username, email }, setSaveLoading)
+        const result = await apiCall.updateUserProfile(userProfile.username, { username, email, fullName, bio, profession }, setSaveLoading)
         if (result?.username) {
             await apiCall.getUserDetails(setLoading, setUserProfile)
             setSuccessMsg("Profile updated successfully!")
@@ -112,7 +127,10 @@ export default function EditProfilePage() {
 
     const hasChanges =
         username !== (userProfile.username || "") ||
-        email !== (userProfile.email || "")
+        email !== (userProfile.email || "") ||
+        fullName !== (userProfile.fullName || "") ||
+        bio !== (userProfile.bio || "") ||
+        profession !== (userProfile.profession || "")
 
     return (
         <main className="flex-1 h-full bg-surface pb-12 overflow-y-auto">
@@ -135,7 +153,7 @@ export default function EditProfilePage() {
                 <div className="mt-14">
                     <h1 className="text-2xl font-bold text-on-surface">Edit Profile</h1>
                     <p className="text-sm text-on-surface-variant mt-1">
-                        Update your username or email address.
+                        Update your public profile details and account settings.
                     </p>
                 </div>
 
@@ -191,6 +209,56 @@ export default function EditProfilePage() {
                             )}
                         </div>
 
+                        {/* Full Name */}
+                        <div className="flex flex-col gap-1.5">
+                            <label htmlFor="edit-fullname" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <FaUser className="text-brand-500 text-xs" />
+                                Full Name
+                            </label>
+                            <input
+                                id="edit-fullname"
+                                type="text"
+                                value={fullName}
+                                onChange={(e) => { setFullName(e.target.value); setErrors(p => ({ ...p, fullName: "" })) }}
+                                maxLength={100}
+                                placeholder="John Doe"
+                                className={`input-field ${errors.fullName ? "input-error" : ""}`}
+                            />
+                            {errors.fullName && (
+                                <p className="text-red-500 text-xs font-medium">{errors.fullName}</p>
+                            )}
+                        </div>
+
+                        {/* Bio */}
+                        <div className="flex flex-col gap-1.5">
+                            <div className="flex justify-between items-center">
+                                <label htmlFor="edit-bio" className="text-sm font-semibold text-gray-700">Bio (Optional)</label>
+                                {!userProfile.bio && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Recommended</span>}
+                            </div>
+                            <textarea
+                                id="edit-bio"
+                                value={bio}
+                                onChange={(e) => { setBio(e.target.value); setErrors(p => ({ ...p, bio: "" })) }}
+                                maxLength={255}
+                                placeholder="Tell us about yourself..."
+                                className={`input-field resize-y min-h-[80px] ${errors.bio ? "input-error" : ""}`}
+                            />
+                        </div>
+
+                        {/* Profession */}
+                        <div className="flex flex-col gap-1.5 mb-2">
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-xs font-medium text-gray-500 italic">Select your profession to help others know your background.</span>
+                                {!userProfile.profession && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">Recommended</span>}
+                            </div>
+                            <DictionaryPillInput
+                                type="profession"
+                                label="Profession (Optional)"
+                                value={profession}
+                                onChange={(val) => setProfession(val)}
+                            />
+                        </div>
+
                         {/* Actions */}
                         <div className="flex gap-3 pt-1">
                             <button
@@ -202,7 +270,7 @@ export default function EditProfilePage() {
                             </button>
                             <button
                                 type="submit"
-                                disabled={saveLoading || !hasChanges}
+                                disabled={saveLoading}
                                 className="btn-primary flex-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <FaSave className="text-xs" />
