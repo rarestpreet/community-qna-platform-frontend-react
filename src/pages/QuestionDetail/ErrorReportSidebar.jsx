@@ -128,8 +128,12 @@ export default function ErrorReportSidebar({ question, canAnswer, onRefresh, pos
                         {question.authorUsername?.[0]?.toUpperCase()}
                     </div>
                     <div>
-                        <h4 className="font-bold text-on-surface">@{question.authorUsername}</h4>
-                        {/* We don't have author's role/title in the question DTO by default, could use reputation if available */}
+                        <h4 className="font-bold text-on-surface">
+                            {question.authorFullName || question.authorUsername}
+                        </h4>
+                        {question.authorFullName && (
+                            <p className="text-on-surface-variant text-sm font-medium">@{question.authorUsername}</p>
+                        )}
                     </div>
                 </div>
                 <button 

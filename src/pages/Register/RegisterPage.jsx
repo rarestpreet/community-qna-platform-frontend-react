@@ -2,14 +2,18 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { FaExclamationCircle } from "react-icons/fa"
 import AuthInput from "../../components/ui/AuthInput"
-import BrandContainer from "../../components/ui/BrandContainer"
 import apiCall from "../../services/apiCall"
 import { useUserContext } from "../../context/userContext"
+import DictionaryPillInput from "../../components/ui/DictionaryPillInput"
+import BrandContainer from "../../components/ui/BrandContainer"
 
 function RegisterPage() {
     const [username, setUsername] = useState("")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [fullName, setFullName] = useState("")
+    const [bio, setBio] = useState("")
+    const [profession, setProfession] = useState("")
     const [errors, setErrors] = useState({})
     const [globalError, setGlobalError] = useState("")
     const navigate = useNavigate()
@@ -19,6 +23,8 @@ function RegisterPage() {
         const errs = {}
         if (!username.trim()) errs.username = "Username is required."
         else if (username.length < 5 || username.length > 20) errs.username = "Username must be 5–20 characters."
+
+        if (!fullName.trim()) errs.fullName = "Full Name is required."
 
         if (!email.trim()) errs.email = "Email is required."
 
@@ -54,7 +60,10 @@ function RegisterPage() {
         const response = await apiCall.registerUser({
             username,
             email,
-            password
+            password,
+            fullName,
+            bio,
+            profession
         }, setLoading, navigate)
 
         // Handle API errors — response is an error object when status !== 2xx
@@ -129,6 +138,28 @@ function RegisterPage() {
                                 value={email}
                                 onChange={(e) => { setEmail(e.target.value); setErrors(p => ({ ...p, email: "" })) }}
                                 error={errors.email}
+                            />
+                            <AuthInput
+                                label="Full Name"
+                                type="text"
+                                placeholder="John Doe"
+                                value={fullName}
+                                onChange={(e) => { setFullName(e.target.value); setErrors(p => ({ ...p, fullName: "" })) }}
+                                error={errors.fullName}
+                            />
+                            <AuthInput
+                                label="Bio (Optional)"
+                                type="text"
+                                placeholder="Tell us about yourself..."
+                                value={bio}
+                                onChange={(e) => { setBio(e.target.value); setErrors(p => ({ ...p, bio: "" })) }}
+                                error={errors.bio}
+                            />
+                            <DictionaryPillInput
+                                type="profession"
+                                label="Profession (Optional)"
+                                value={profession}
+                                onChange={(val) => setProfession(val)}
                             />
                             <AuthInput
                                 label="Password"
