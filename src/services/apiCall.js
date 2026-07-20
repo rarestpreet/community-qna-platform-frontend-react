@@ -448,44 +448,6 @@ const getDictionaryValues = async (type, search = "", limit = 10, setLoading) =>
     }
 }
 
-// ── Health ────────────────────────────────────────────────────
-const checkHealthPing = async () => {
-    try {
-        const response = await api.get("/health")
-
-        return response?.data
-    } catch (ex) {
-        logging.errorHandler(ex?.response?.data)
-
-        return ex?.response.data
-    }
-}
-
-const checkHealthSendCookie = async () => {
-    try {
-        const response = await api.post("/health/cors")
-
-        return response?.data
-    } catch (ex) {
-        logging.errorHandler(ex?.response?.data)
-
-        return ex?.response.data
-    }
-}
-
-const checkHealthCors = async () => {
-    try {
-        const response = await api.get("/health/cors")
-
-        return response?.data
-    } catch (ex) {
-        logging.errorHandler(ex?.response?.data)
-
-        return ex?.response.data
-    }
-}
-
-
 const toggleAnswerStatus = async (toggleDetails, setLoading) => {
     setLoading(true)
 
@@ -625,9 +587,7 @@ const apiCall = {
     postComment,
     deleteComment,
     toggleVote,
-    checkHealthPing,
-    checkHealthSendCookie,
-    checkHealthCors,
+
     toggleAnswerStatus,
     updateAnswer,
     deleteAnswer,

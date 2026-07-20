@@ -8,7 +8,7 @@ import AskQuestionPage from "./pages/AskQuestion/AskQuestionPage"
 import SubmitSolutionPage from "./pages/SubmitSolution/SubmitSolutionPage"
 import ErrorReportDetailPage from "./pages/QuestionDetail/ErrorReportDetailPage"
 import AdminDashboard from "./pages/Admin/AdminDashboard"
-import HealthCheck from "./pages/Admin/HealthCheck"
+
 import ResetPasswordPage from "./pages/UserProfile/ResetPasswordPage"
 import { AdminOnly, AuthenticatedOnly } from "./components/CustomeRoutes"
 import ProfileLayout from "./ProfileLayout"
@@ -23,7 +23,6 @@ function App() {
             <Route path="/profile/:username" element={<UserProfilePage />} />
           </Route>
           <Route path="" element={<AdminOnly />}>
-            <Route path="/health" element={<HealthCheck />} />
             <Route path="/tag" element={<AdminDashboard />} />
           </Route>
         </Route>
